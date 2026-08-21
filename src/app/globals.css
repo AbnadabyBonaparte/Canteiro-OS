@@ -1,0 +1,183 @@
+@import 'tailwindcss';
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   CANTEIRO OS — tokens --cnt-*
+   Plano completo e argumentação em docs/DESIGN.md.
+   Matéria: concreto (superfície) · aço graduado (medida) · latão (o carimbo).
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+@theme {
+  /* superfície — concreto */
+  --color-obsidian: #0a0e1a;
+  --color-surface: #121829;
+  --color-surface-2: #182036;
+  --color-sunken: #070a12;
+  --color-line: #232c42;
+  --color-line-strong: #34405c;
+
+  /* tinta */
+  --color-chalk: #e9ecf4;
+  --color-concrete: #97a1b7;
+  --color-concrete-dim: #6b7488;
+
+  /* acento — latão, único acento de marca */
+  --color-gold: #c9a24b;
+  --color-gold-bright: #e0bc6a;
+
+  /* estado — exceção argumentada (DESIGN.md §3.1): cor de estado é
+     informação, não decoração. Óxido e oliva vêm do próprio canteiro. */
+  --color-rust: #c4553d;
+  --color-rust-bright: #e07a5f;
+  --color-olive: #6e9070;
+  --color-olive-bright: #8fb391;
+
+  --font-display: var(--fonte-display), 'Arial Narrow', sans-serif;
+  --font-sans: var(--fonte-corpo), system-ui, sans-serif;
+  --font-mono: var(--fonte-mono), ui-monospace, monospace;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+   BASE
+   ───────────────────────────────────────────────────────────────────────── */
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  background: var(--color-obsidian);
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--color-obsidian);
+  color: var(--color-chalk);
+  font-family: var(--font-sans);
+  /* Regra do sol: 16px é o piso do corpo no telefone. */
+  font-size: 16px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Foco visível — exigência do CRIVO. Nunca `outline: none` sem substituto. */
+:focus-visible {
+  outline: 2px solid var(--color-gold);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+::selection {
+  background: var(--color-gold);
+  color: var(--color-obsidian);
+}
+
+/* Numerais tabulares em toda coluna de número — a trena não pode dançar. */
+.num {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: 'tnum' 1;
+}
+
+/* Título de seção: placa de obra. */
+.placa {
+  font-family: var(--font-display);
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+   A ASSINATURA — a régua de medição (docs/DESIGN.md §2)
+   Quatro marcas numa mesma régua: executado ▸ aceito ▸ faturado ▸ pago.
+   Quatro densidades do MESMO ouro, nunca quatro cores.
+   ───────────────────────────────────────────────────────────────────────── */
+
+.regua {
+  position: relative;
+  height: 1.5rem;
+  background: var(--color-sunken);
+  border: 1px solid var(--color-line);
+  overflow: hidden;
+}
+
+.regua-faixa {
+  position: absolute;
+  inset-block: 0;
+  left: 0;
+  transition: width 240ms ease-out;
+}
+
+.regua-executado { background: color-mix(in srgb, var(--color-gold) 22%, transparent); }
+.regua-aceito    { background: color-mix(in srgb, var(--color-gold) 42%, transparent); }
+.regua-faturado  { background: color-mix(in srgb, var(--color-gold) 64%, transparent); }
+.regua-pago      { background: var(--color-gold); }
+
+/* Os ticks de trena: 20 divisões, a cada 5 uma mais alta. */
+.regua-ticks {
+  position: absolute;
+  inset: 0;
+  background-image:
+    repeating-linear-gradient(
+      to right,
+      color-mix(in srgb, var(--color-obsidian) 55%, transparent) 0 1px,
+      transparent 1px calc(100% / 20)
+    );
+  background-size: 100% 45%;
+  background-repeat: no-repeat;
+  background-position: bottom left;
+}
+
+.regua-ticks::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: repeating-linear-gradient(
+    to right,
+    color-mix(in srgb, var(--color-obsidian) 75%, transparent) 0 1px,
+    transparent 1px calc(100% / 4)
+  );
+  background-size: 100% 100%;
+  background-repeat: no-repeat;
+}
+
+/* A cinta que marca o degrau aceito → pago quando o dinheiro está parado. */
+.regua-preso {
+  position: absolute;
+  inset-block: 0;
+  border-left: 1px solid var(--color-rust);
+  border-right: 1px solid var(--color-rust);
+  /* Leve de propósito: a cinta MARCA o degrau, não apaga as quatro marcas de
+     ouro que estão embaixo dela. */
+  background: repeating-linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--color-rust) 13%, transparent) 0 3px,
+    transparent 3px 7px
+  );
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+   CARTÃO HONESTO — onde o produto real vai integrar (Lei 7).
+   Borda tracejada, sem botão. Nunca um botão morto.
+   ───────────────────────────────────────────────────────────────────────── */
+
+.honesto {
+  border: 1px dashed var(--color-line-strong);
+  background: color-mix(in srgb, var(--color-surface) 60%, transparent);
+}
+
+/* Rolagem horizontal contida — tabela larga rola dentro dela, nunca a página. */
+.rolagem {
+  overflow-x: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-line-strong) transparent;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
