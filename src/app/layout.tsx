@@ -12,21 +12,25 @@ import './globals.css';
  */
 const display = Oswald({
   subsets: ['latin'],
-  weight: ['400', '500', '700'],
+  /* ⭐ Só os pesos que a casa usa. Cada peso é um arquivo baixado antes da
+     primeira pintura, disputando banda com a foto do topo — e peso que ninguém
+     escreve na tela é banda gasta à toa. A tipografia da placa é 500; não há
+     negrito em lugar nenhum, por decisão de desenho (DESIGN.md §4). */
+  weight: ['500'],
   variable: '--fonte-display',
   display: 'swap',
 });
 
 const corpo = IBM_Plex_Sans({
   subsets: ['latin'],
-  weight: ['400', '500', '600'],
+  weight: ['400'],
   variable: '--fonte-corpo',
   display: 'swap',
 });
 
 const mono = IBM_Plex_Mono({
   subsets: ['latin'],
-  weight: ['400', '500', '600'],
+  weight: ['400', '500'],
   variable: '--fonte-mono',
   display: 'swap',
 });

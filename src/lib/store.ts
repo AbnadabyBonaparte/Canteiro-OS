@@ -15,13 +15,15 @@
 import { useSyncExternalStore } from 'react';
 import {
   MUNDO,
-  type Chamado,
+  type Compra,
   type EntradaDiario,
+  type Empreiteiro,
   type EstadoResposta,
   type Glosa,
   type Medicao,
   type Mundo,
-  type Prestador,
+  type Proposta,
+  type ReguaConcentracao,
   diasAtras,
 } from '@/data/seed';
 
@@ -118,59 +120,75 @@ export function cancelarEntradaDoDiario(id: string, motivo: string, por: string)
   avisar();
 }
 
-export interface RascunhoChamado {
+export interface RascunhoProposta {
   readonly obraId: string;
+  readonly objeto: string;
+  readonly frenteId: string;
   readonly especialidadeId: string;
-  readonly vagas: number;
-  readonly dataServico: string;
+  readonly unidade: string;
+  readonly quantidade: number;
+  readonly valorGlobalCents: number;
+  readonly prazoDias: number;
+  readonly inicioPrevisto: string;
   readonly encarregado: string;
   readonly convidados: readonly string[];
 }
 
-/** Abrir um chamado. Ninguém responde por ninguém: todos nascem sem resposta. */
-export function abrirChamado(r: RascunhoChamado): string {
-  const id = novoId('c');
-  const chamado: Chamado = {
+/**
+ * Abrir uma PROPOSTA DE EMPREITA — objeto, valor global e prazo.
+ *
+ * ⛔ Ninguém responde por ninguém: todos os convidados nascem sem resposta.
+ * ⚖️ A proposta descreve um RESULTADO a entregar, nunca um tempo a cumprir.
+ */
+export function abrirProposta(r: RascunhoProposta): string {
+  const id = novoId('p');
+  const proposta: Proposta = {
     id,
     obraId: r.obraId,
+    objeto: r.objeto,
+    frenteId: r.frenteId,
     especialidadeId: r.especialidadeId,
-    vagas: r.vagas,
-    dataServico: r.dataServico,
-    abertoEm: diasAtras(0),
+    unidade: r.unidade,
+    quantidade: r.quantidade,
+    valorGlobalCents: r.valorGlobalCents,
+    prazoDias: r.prazoDias,
+    inicioPrevisto: r.inicioPrevisto,
+    abertaEm: diasAtras(0),
     encarregado: r.encarregado,
-    respostas: r.convidados.map((prestadorId) => ({
-      prestadorId,
+    respostas: r.convidados.map((empreiteiroId) => ({
+      empreiteiroId,
       estado: 'sem-resposta' as EstadoResposta,
       hora: null,
       motivo: null,
     })),
   };
-  estado = { ...estado, chamados: [chamado, ...estado.chamados] };
+  estado = { ...estado, propostas: [proposta, ...estado.propostas] };
   avisar();
   return id;
 }
 
 /**
- * ⚠️ A resposta é do PRESTADOR. Na vitrine o botão existe para a demonstração
- * andar; no produto, quem carimba `recusou` é ele, com a permissão dele — um
- * "não" preenchido por outra pessoa destrói o valor da prova.
+ * ⚠️ A resposta é do EMPREITEIRO. Na vitrine o botão existe para a
+ * demonstração andar; no produto, quem carimba `recusou` é ele, com a permissão
+ * dele — um "não" preenchido por outra pessoa não é prova, é falsificação, e
+ * destrói o valor de todo o resto.
  */
-export function responderChamado(
-  chamadoId: string,
-  prestadorId: string,
+export function responderProposta(
+  propostaId: string,
+  empreiteiroId: string,
   novoEstado: EstadoResposta,
   motivo: string | null,
   hora: string,
 ): void {
   estado = {
     ...estado,
-    chamados: estado.chamados.map((c) =>
-      c.id !== chamadoId
-        ? c
+    propostas: estado.propostas.map((p) =>
+      p.id !== propostaId
+        ? p
         : {
-            ...c,
-            respostas: c.respostas.map((r) =>
-              r.prestadorId === prestadorId ? { ...r, estado: novoEstado, motivo, hora } : r,
+            ...p,
+            respostas: p.respostas.map((r) =>
+              r.empreiteiroId === empreiteiroId ? { ...r, estado: novoEstado, motivo, hora } : r,
             ),
           },
     ),
@@ -178,7 +196,7 @@ export function responderChamado(
   avisar();
 }
 
-export interface RascunhoPrestador {
+export interface RascunhoEmpreiteiro {
   readonly nome: string;
   readonly especialidadeId: string;
   readonly modalidadeId: string;
@@ -186,12 +204,97 @@ export interface RascunhoPrestador {
   readonly ferramentaPropria: boolean;
 }
 
-export function cadastrarPrestador(r: RascunhoPrestador): string {
+export function cadastrarEmpreiteiro(r: RascunhoEmpreiteiro): string {
   const id = novoId('p');
-  const p: Prestador = { id, avaliacao: 0, ...r };
-  estado = { ...estado, prestadores: [p, ...estado.prestadores] };
+  const e: Empreiteiro = { id, avaliacao: 0, ...r };
+  estado = { ...estado, empreiteiros: [e, ...estado.empreiteiros] };
   avisar();
   return id;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// v2 — UMA AÇÃO QUE FUNCIONA EM CADA SALA
+// ─────────────────────────────────────────────────────────────────────────────
+
+/** Abrir requisição de material. O resto do ciclo é honesto, não simulado. */
+export function abrirRequisicao(r: {
+  obraId: string;
+  familiaId: string;
+  descricao: string;
+  unidade: string;
+  quantidade: number;
+  requisitadaPor: string;
+}): string {
+  const id = novoId('co');
+  const compra: Compra = {
+    id,
+    obraId: r.obraId,
+    familiaId: r.familiaId,
+    descricao: r.descricao,
+    unidade: r.unidade,
+    quantidade: r.quantidade,
+    requisitadaEm: diasAtras(0),
+    requisitadaPor: r.requisitadaPor,
+    estado: 'requisitada',
+    cotacoes: [],
+    fornecedorEscolhido: null,
+    valorCents: 0,
+    recebidaEm: null,
+    divergencia: 0,
+    motivoCancelamento: null,
+  };
+  estado = { ...estado, compras: [compra, ...estado.compras] };
+  avisar();
+  return id;
+}
+
+/**
+ * ⛔ Requisição não se apaga: cancela-se COM MOTIVO, e ela continua na lista.
+ * A física do livro imutável, a mesma do diário.
+ */
+export function cancelarRequisicao(id: string, motivo: string): void {
+  estado = {
+    ...estado,
+    compras: estado.compras.map((c) =>
+      c.id === id && c.motivoCancelamento === null
+        ? { ...c, estado: 'cancelada' as const, motivoCancelamento: motivo }
+        : c,
+    ),
+  };
+  avisar();
+}
+
+/** Registrar a resposta a um ofício do órgão. O prazo para de correr aqui. */
+export function responderOficio(id: string, responsavel: string): void {
+  estado = {
+    ...estado,
+    oficios: estado.oficios.map((o) =>
+      o.id === id && o.respondidoEm === null
+        ? { ...o, respondidoEm: diasAtras(0), estado: 'respondido' as const, responsavel }
+        : o,
+    ),
+  };
+  avisar();
+}
+
+/** Dar a entrega da empreita por aceita — é o termo de aceite, com data. */
+export function aceitarEntrega(empreitaId: string): void {
+  estado = {
+    ...estado,
+    empreitas: estado.empreitas.map((e) =>
+      e.id === empreitaId && e.aceiteEm === null
+        ? {
+            ...e,
+            estado: 'entregue' as const,
+            aceiteEm: diasAtras(0),
+            marcos: e.marcos.map((m, i) =>
+              i === e.marcos.length - 1 ? { ...m, pagoEm: null } : m,
+            ),
+          }
+        : e,
+    ),
+  };
+  avisar();
 }
 
 /** Lançar glosa numa medição. O motivo é obrigatório — quem chama garante. */
@@ -228,11 +331,14 @@ export function fecharMedicao(medicaoId: string): void {
 }
 
 /**
- * ⚖️ A RÉGUA DE VÍNCULO. Quem define é o jurídico da empresa; o sistema não
- * sugere um número — ver a nota na tela de Diaristas.
+ * ⚖️ A RÉGUA DE CONCENTRAÇÃO — quatro parâmetros, todos do tenant.
+ *
+ * Quem define é o jurídico da empresa. ⛔ O sistema não sugere número nenhum, e
+ * a tela de Configurações diz isso com todas as letras: sugerir seria opinar
+ * sobre matéria privativa de advogado.
  */
-export function definirReguaVinculo(diarias: number, janelaDias: number): void {
-  estado = { ...estado, reguaVinculo: { diarias, janelaDias } };
+export function definirReguaConcentracao(r: ReguaConcentracao): void {
+  estado = { ...estado, reguaConcentracao: r };
   avisar();
 }
 

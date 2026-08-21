@@ -8,6 +8,11 @@ import type { NextConfig } from 'next';
  */
 const nextConfig: NextConfig = {
   reactStrictMode: true,
+  images: {
+    // As peças de `public/img/` já nascem WebP no tamanho certo. Um ano de
+    // cache evita que o CDN volte a pedir o que nunca muda.
+    minimumCacheTTL: 31_536_000,
+  },
 };
 
 export default nextConfig;

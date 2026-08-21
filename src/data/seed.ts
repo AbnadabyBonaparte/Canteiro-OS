@@ -140,13 +140,13 @@ export interface Medicao {
 export interface Documento {
   readonly id: string;
   readonly tipoId: string;
-  readonly titularKind: 'prestador' | 'obra' | 'empresa';
+  readonly titularKind: 'empreiteiro' | 'obra' | 'empresa' | 'equipe';
   readonly titularId: string;
   readonly titularNome: string;
   readonly vence: string;
 }
 
-export interface Prestador {
+export interface Empreiteiro {
   readonly id: string;
   readonly nome: string;
   readonly especialidadeId: string;
@@ -157,34 +157,80 @@ export interface Prestador {
   readonly ferramentaPropria: boolean;
 }
 
-export interface Diaria {
+/**
+ * ⚖️ A EMPREITA — contrato de RESULTADO, não de tempo.
+ *
+ * Código Civil, arts. 610–626: o empreiteiro entrega uma obra ou parte dela por
+ * um **valor global** combinado, com autonomia de meios, ferramenta própria e
+ * podendo trazer ajudantes seus. Não se paga o dia; paga-se a entrega.
+ *
+ * ⛔ O vocabulário anterior saiu do produto em 22/08/2026 por orientação do
+ * jurídico da empresa (registro em `docs/MIGRACAO.md` §0). Nada aqui mede tempo
+ * trabalhado — mede objeto entregue.
+ */
+export type EstadoEmpreita = 'contratada' | 'em-execucao' | 'entregue' | 'quitada' | 'cancelada';
+
+/** Uma parcela do valor global, presa a um marco — nunca a um dia. */
+export interface MarcoDePagamento {
+  readonly rotulo: string;
+  readonly pctValor: number;
+  readonly pagoEm: string | null;
+}
+
+export interface Empreita {
   readonly id: string;
-  readonly prestadorId: string;
+  readonly propostaId: string | null;
+  readonly empreiteiroId: string;
   readonly obraId: string;
-  readonly data: string;
-  readonly encarregado: string;
-  readonly valorCents: number;
+  /** O que se entrega. Texto livre — é o objeto do contrato. */
+  readonly objeto: string;
+  readonly frenteId: string;
+  readonly unidade: string;
+  readonly quantidade: number;
+  readonly valorGlobalCents: number;
+  readonly prazoDias: number;
+  readonly inicio: string;
+  readonly estado: EstadoEmpreita;
+  /** Quem recebe a entrega pela empresa. */
+  readonly aceitaPor: string;
+  /** O termo de aceite da entrega — a data em que a obra foi dada por feita. */
+  readonly aceiteEm: string | null;
+  /** O termo de quitação — encerra o contrato e não reabre. */
+  readonly quitacaoEm: string | null;
+  readonly marcos: readonly MarcoDePagamento[];
   readonly documento: string;
 }
 
 export type EstadoResposta = 'aceitou' | 'recusou' | 'sem-resposta';
 
-export interface RespostaChamado {
-  readonly prestadorId: string;
+export interface RespostaProposta {
+  readonly empreiteiroId: string;
   readonly estado: EstadoResposta;
   readonly hora: string | null;
   readonly motivo: string | null;
 }
 
-export interface Chamado {
+/**
+ * A PROPOSTA DE EMPREITA — o convite, antes de virar contrato.
+ *
+ * ⭐ A recusa é o dado mais valioso desta peça: recusar sem consequência é o
+ * traço mais forte de autonomia. Um cadastro que só guarda o "sim" não prova
+ * nada. Quem carimba o "não" é o empreiteiro — nunca o encarregado por ele.
+ */
+export interface Proposta {
   readonly id: string;
   readonly obraId: string;
+  readonly objeto: string;
+  readonly frenteId: string;
   readonly especialidadeId: string;
-  readonly vagas: number;
-  readonly dataServico: string;
-  readonly abertoEm: string;
+  readonly unidade: string;
+  readonly quantidade: number;
+  readonly valorGlobalCents: number;
+  readonly prazoDias: number;
+  readonly inicioPrevisto: string;
+  readonly abertaEm: string;
   readonly encarregado: string;
-  readonly respostas: readonly RespostaChamado[];
+  readonly respostas: readonly RespostaProposta[];
 }
 
 export interface EntradaDiario {
@@ -210,19 +256,204 @@ export interface Consumo {
   readonly quantidadeConsumida: number;
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// v2 — AS SALAS NOVAS
+// ─────────────────────────────────────────────────────────────────────────────
+
+/** O contrato com o órgão público — o de cima de todos os outros. */
+export interface ContratoPublico {
+  readonly id: string;
+  readonly obraId: string;
+  readonly numero: string;
+  readonly objeto: string;
+  readonly modalidade: string;
+  readonly assinadoEm: string;
+  readonly ordemDeServicoEm: string;
+  readonly prazoDias: number;
+  readonly valorOriginalCents: number;
+  readonly garantiaPct: number;
+}
+
+export interface Aditivo {
+  readonly id: string;
+  readonly contratoId: string;
+  readonly numero: string;
+  readonly tipoId: string;
+  readonly assinadoEm: string;
+  /** Positivo acresce, negativo suprime. Em prazo, vem zerado. */
+  readonly valorCents: number;
+  readonly prazoDias: number;
+  readonly justificativa: string;
+}
+
+export type EstadoOficio = 'recebido' | 'respondido' | 'vencido' | 'arquivado';
+
+/** A relação formal com o órgão: ofício entra, resposta sai, prazo corre. */
+export interface Oficio {
+  readonly id: string;
+  readonly obraId: string;
+  readonly numero: string;
+  readonly tipoId: string;
+  readonly direcao: 'recebido' | 'enviado';
+  readonly assunto: string;
+  readonly em: string;
+  readonly prazoResposta: string | null;
+  readonly respondidoEm: string | null;
+  readonly estado: EstadoOficio;
+  readonly responsavel: string;
+}
+
+export interface VisitaDeFiscal {
+  readonly id: string;
+  readonly obraId: string;
+  readonly em: string;
+  readonly fiscal: string;
+  readonly constatacao: string;
+  readonly exigencias: number;
+}
+
+/** A equipe própria — gente CLT da empresa. ⛔ Não se confunde com empreiteiro. */
+export interface Colaborador {
+  readonly id: string;
+  readonly nome: string;
+  readonly funcao: string;
+  readonly obraId: string;
+  readonly admitidoEm: string;
+  readonly estado: 'ativo' | 'afastado';
+}
+
+export interface Treinamento {
+  readonly id: string;
+  readonly colaboradorId: string;
+  readonly nome: string;
+  readonly em: string;
+  readonly cargaHoras: number;
+  readonly validoAte: string;
+}
+
+export interface EntregaDeEpi {
+  readonly id: string;
+  readonly pessoaId: string;
+  readonly pessoaNome: string;
+  readonly item: string;
+  readonly em: string;
+  readonly assinado: boolean;
+}
+
+export interface Fornecedor {
+  readonly id: string;
+  readonly nome: string;
+  readonly familiaId: string;
+  readonly cidade: string;
+  readonly avaliacao: number;
+  readonly prazoMedioDias: number;
+  readonly estado: 'ativo' | 'arquivado';
+}
+
+export type EstadoCompra = 'requisitada' | 'cotando' | 'pedida' | 'recebida' | 'cancelada';
+
+export interface Compra {
+  readonly id: string;
+  readonly obraId: string;
+  readonly familiaId: string;
+  readonly descricao: string;
+  readonly unidade: string;
+  readonly quantidade: number;
+  readonly requisitadaEm: string;
+  readonly requisitadaPor: string;
+  readonly estado: EstadoCompra;
+  readonly cotacoes: readonly { readonly fornecedorId: string; readonly valorCents: number }[];
+  readonly fornecedorEscolhido: string | null;
+  readonly valorCents: number;
+  readonly recebidaEm: string | null;
+  /** Diferença entre o pedido e o que chegou. Zero quando bateu. */
+  readonly divergencia: number;
+  readonly motivoCancelamento: string | null;
+}
+
+export interface Equipamento {
+  readonly id: string;
+  readonly nome: string;
+  readonly patrimonio: string;
+  readonly obraId: string;
+  readonly desde: string;
+  readonly horimetro: number;
+  readonly proximaManutencaoHoras: number;
+  readonly estado: 'operando' | 'parado' | 'manutencao';
+}
+
+/** Custo real lançado na obra — livro, não planilha. */
+export interface CustoDaObra {
+  readonly id: string;
+  readonly obraId: string;
+  readonly familiaId: string;
+  readonly descricao: string;
+  readonly em: string;
+  readonly valorCents: number;
+  readonly origem: 'compra' | 'empreita' | 'folha' | 'equipamento' | 'outro';
+}
+
+export interface ContaAPagar {
+  readonly id: string;
+  readonly obraId: string;
+  readonly favorecido: string;
+  readonly descricao: string;
+  readonly vence: string;
+  readonly valorCents: number;
+  readonly pagoEm: string | null;
+}
+
+/** Qualquer coisa que está aberta e envelhecendo. Alimenta a Resolutividade. */
+export interface Pendencia {
+  readonly id: string;
+  readonly setorId: string;
+  readonly obraId: string | null;
+  readonly titulo: string;
+  readonly abertaEm: string;
+  readonly responsavel: string;
+}
+
 export interface Mundo {
   readonly prefeituras: readonly Prefeitura[];
   readonly obras: readonly Obra[];
   readonly itens: readonly ItemContrato[];
   readonly medicoes: readonly Medicao[];
   readonly consumos: readonly Consumo[];
-  readonly prestadores: readonly Prestador[];
+  readonly empreiteiros: readonly Empreiteiro[];
   readonly documentos: readonly Documento[];
-  readonly diarias: readonly Diaria[];
-  readonly chamados: readonly Chamado[];
+  readonly empreitas: readonly Empreita[];
+  readonly propostas: readonly Proposta[];
   readonly diario: readonly EntradaDiario[];
-  /** A régua de vínculo. Parâmetro do jurídico da empresa — ver §Lei da régua. */
-  readonly reguaVinculo: { readonly diarias: number; readonly janelaDias: number };
+  readonly contratos: readonly ContratoPublico[];
+  readonly aditivos: readonly Aditivo[];
+  readonly oficios: readonly Oficio[];
+  readonly visitas: readonly VisitaDeFiscal[];
+  readonly colaboradores: readonly Colaborador[];
+  readonly treinamentos: readonly Treinamento[];
+  readonly episEntregues: readonly EntregaDeEpi[];
+  readonly fornecedores: readonly Fornecedor[];
+  readonly compras: readonly Compra[];
+  readonly equipamentos: readonly Equipamento[];
+  readonly custos: readonly CustoDaObra[];
+  readonly contasAPagar: readonly ContaAPagar[];
+  readonly pendencias: readonly Pendencia[];
+  /**
+   * ⚖️ A RÉGUA DE CONCENTRAÇÃO — quatro parâmetros, todos do TENANT.
+   * Quem define é o jurídico da empresa; o sistema não sugere número nenhum.
+   * Os valores do seed são EXEMPLO e a tela diz isso com todas as letras.
+   */
+  readonly reguaConcentracao: ReguaConcentracao;
+}
+
+export interface ReguaConcentracao {
+  /** Empreitas seguidas com o mesmo tomador antes de acender o aviso. */
+  readonly empreitasConsecutivas: number;
+  /** Dias sem nenhum intervalo entre uma empreita e a seguinte. */
+  readonly diasSemIntervalo: number;
+  /** Piso de recusa esperado — abaixo disso, a autonomia não aparece. */
+  readonly pctRecusaMinimo: number;
+  /** Quantas outras empresas o empreiteiro declara atender. */
+  readonly outrasEmpresasMinimo: number;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -230,9 +461,24 @@ export interface Mundo {
 // ─────────────────────────────────────────────────────────────────────────────
 
 const PREFEITURAS: readonly Prefeitura[] = [
-  { id: 'serra-azul', nome: 'Prefeitura de Serra Azul', atrasoMedioDias: 45, fiscal: 'eng. A. Moreira' },
-  { id: 'vila-aurora', nome: 'Prefeitura de Vila Aurora', atrasoMedioDias: 90, fiscal: 'eng.ª R. Caldas' },
-  { id: 'porto-cristalino', nome: 'Prefeitura de Porto Cristalino', atrasoMedioDias: 20, fiscal: 'arq. D. Peixoto' },
+  {
+    id: 'serra-azul',
+    nome: 'Prefeitura de Serra Azul',
+    atrasoMedioDias: 45,
+    fiscal: 'eng. A. Moreira',
+  },
+  {
+    id: 'vila-aurora',
+    nome: 'Prefeitura de Vila Aurora',
+    atrasoMedioDias: 90,
+    fiscal: 'eng.ª R. Caldas',
+  },
+  {
+    id: 'porto-cristalino',
+    nome: 'Prefeitura de Porto Cristalino',
+    atrasoMedioDias: 20,
+    fiscal: 'arq. D. Peixoto',
+  },
 ];
 
 const OBRAS: readonly Obra[] = [
@@ -244,7 +490,15 @@ const OBRAS: readonly Obra[] = [
     contratoCents: 240_000_000,
     inicio: diasAtras(150),
     prazoMeses: 12,
-    frentes: ['fundacao', 'estrutura', 'alvenaria', 'cobertura', 'hidraulica', 'eletrica', 'acabamento'],
+    frentes: [
+      'fundacao',
+      'estrutura',
+      'alvenaria',
+      'cobertura',
+      'hidraulica',
+      'eletrica',
+      'acabamento',
+    ],
     pctFisico: 62,
     aditivoPct: 8.4,
     encarregado: 'Sr. Aparecido',
@@ -413,7 +667,9 @@ function construirMedicoes(): Medicao[] {
     }
   }
 
-  return saida.sort((a, b) => (a.obraId === b.obraId ? b.numero - a.numero : a.obraId < b.obraId ? -1 : 1));
+  return saida.sort((a, b) =>
+    a.obraId === b.obraId ? b.numero - a.numero : a.obraId < b.obraId ? -1 : 1,
+  );
 }
 
 const MEDICOES_BASE = construirMedicoes();
@@ -456,32 +712,85 @@ const MEDICOES: readonly Medicao[] = MEDICOES_BASE.map((m) => {
  * na tela, e que o "por que isso?" mostra por extenso.
  */
 const CONSUMOS: readonly Consumo[] = [
-  { obraId: 'creche', itemNumero: 3, quantidadeConsumida: 253.4 },   // concreto — o estouro
-  { obraId: 'creche', itemNumero: 4, quantidadeConsumida: 11_100 },  // aço — dentro
-  { obraId: 'creche', itemNumero: 6, quantidadeConsumida: 1_090 },   // alvenaria — dentro
+  { obraId: 'creche', itemNumero: 3, quantidadeConsumida: 253.4 }, // concreto — o estouro
+  { obraId: 'creche', itemNumero: 4, quantidadeConsumida: 11_100 }, // aço — dentro
+  { obraId: 'creche', itemNumero: 6, quantidadeConsumida: 1_090 }, // alvenaria — dentro
   { obraId: 'pavimentacao', itemNumero: 6, quantidadeConsumida: 2_480 },
   { obraId: 'pavimentacao', itemNumero: 3, quantidadeConsumida: 3_180 },
   { obraId: 'ubs', itemNumero: 8, quantidadeConsumida: 236 },
 ];
 
 // ─────────────────────────────────────────────────────────────────────────────
-// PRESTADORES — 40, nomes de fantasia
+// EMPREITEIROS — 40 parceiros de empreita, nomes de fantasia
 // ─────────────────────────────────────────────────────────────────────────────
 
 const PRENOMES = [
-  'Ronaldo', 'Marcos', 'Elias', 'Damião', 'Jonas', 'Sebastião', 'Valdir', 'Cícero',
-  'Adenilson', 'Reginaldo', 'Ademir', 'Jucelino', 'Benedito', 'Edvaldo', 'Ozéias', 'Wanderley',
-  'Gilmar', 'Nivaldo', 'Josimar', 'Aldemir', 'Wesley', 'Fabiano', 'Cleiton', 'Rogério',
-  'Antenor', 'Lindomar', 'Sidnei', 'Odair', 'Everaldo', 'Genivaldo', 'Rubens', 'Tarcísio',
-  'Waldemar', 'Ivanildo', 'Josué', 'Aluísio', 'Deusdete', 'Manoel', 'Nelson', 'Osvaldo',
+  'Ronaldo',
+  'Marcos',
+  'Elias',
+  'Damião',
+  'Jonas',
+  'Sebastião',
+  'Valdir',
+  'Cícero',
+  'Adenilson',
+  'Reginaldo',
+  'Ademir',
+  'Jucelino',
+  'Benedito',
+  'Edvaldo',
+  'Ozéias',
+  'Wanderley',
+  'Gilmar',
+  'Nivaldo',
+  'Josimar',
+  'Aldemir',
+  'Wesley',
+  'Fabiano',
+  'Cleiton',
+  'Rogério',
+  'Antenor',
+  'Lindomar',
+  'Sidnei',
+  'Odair',
+  'Everaldo',
+  'Genivaldo',
+  'Rubens',
+  'Tarcísio',
+  'Waldemar',
+  'Ivanildo',
+  'Josué',
+  'Aluísio',
+  'Deusdete',
+  'Manoel',
+  'Nelson',
+  'Osvaldo',
 ];
 
 const SOBRENOMES = [
-  'B.', 'T.', 'S.', 'M.', 'P.', 'R.', 'C.', 'L.', 'A.', 'F.',
-  'G.', 'D.', 'N.', 'V.', 'Q.', 'X.', 'J.', 'H.', 'E.', 'Z.',
+  'B.',
+  'T.',
+  'S.',
+  'M.',
+  'P.',
+  'R.',
+  'C.',
+  'L.',
+  'A.',
+  'F.',
+  'G.',
+  'D.',
+  'N.',
+  'V.',
+  'Q.',
+  'X.',
+  'J.',
+  'H.',
+  'E.',
+  'Z.',
 ];
 
-function construirPrestadores(): Prestador[] {
+function construirEmpreiteiros(): Empreiteiro[] {
   const rnd = semente(20260821);
   return PRENOMES.map((prenome, i) => ({
     id: `p${String(i + 1).padStart(2, '0')}`,
@@ -489,167 +798,345 @@ function construirPrestadores(): Prestador[] {
     especialidadeId: ESPECIALIDADES[i % ESPECIALIDADES.length].id,
     modalidadeId: MODALIDADES[i % MODALIDADES.length].id,
     avaliacao: Math.round(entre(rnd, 62, 98)),
-    outrasEmpresas: Math.floor(entre(rnd, 0, 4)),
+    // Quem vive de empreita normalmente atende mais de um contratante. O ZERO
+    // é a exceção que interessa ao alerta — e ela é plantada de propósito no p01.
+    outrasEmpresas: 1 + Math.floor(entre(rnd, 0, 4)),
     ferramentaPropria: rnd() > 0.35,
   }));
 }
 
-const PRESTADORES: readonly Prestador[] = construirPrestadores().map((p) => {
+const EMPREITEIROS: readonly Empreiteiro[] = construirEmpreiteiros().map((p) => {
   // ⭐ O caso do alerta: concentração alta, zero recusa, uma obra só.
   if (p.id === 'p01') {
-    return { ...p, nome: 'Ronaldo B.', especialidadeId: 'pedreiro', modalidadeId: 'mei', avaliacao: 88, outrasEmpresas: 0, ferramentaPropria: false };
+    return {
+      ...p,
+      nome: 'Ronaldo B.',
+      especialidadeId: 'pedreiro',
+      modalidadeId: 'mei',
+      avaliacao: 88,
+      outrasEmpresas: 0,
+      ferramentaPropria: false,
+    };
   }
   // ⭐ O contra-exemplo: autonomia de verdade. A demo precisa dos dois.
   if (p.id === 'p02') {
-    return { ...p, nome: 'Marcos T.', especialidadeId: 'armador', modalidadeId: 'autonomo', avaliacao: 91, outrasEmpresas: 3, ferramentaPropria: true };
+    return {
+      ...p,
+      nome: 'Marcos T.',
+      especialidadeId: 'armador',
+      modalidadeId: 'autonomo',
+      avaliacao: 91,
+      outrasEmpresas: 3,
+      ferramentaPropria: true,
+    };
   }
   return p;
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
-// DIÁRIAS — inclusive as 22 seguidas do caso de alerta
+// EMPREITAS — contratos de resultado, e o caso que acende o alerta
 // ─────────────────────────────────────────────────────────────────────────────
 
-function construirDiarias(): Diaria[] {
-  const saida: Diaria[] = [];
-  const rnd = semente(4471);
+/** Os marcos de pagamento padrão desta demonstração: 30% na entrada, 70% no aceite. */
+const MARCOS_PADRAO = (inicio: string, aceite: string | null): MarcoDePagamento[] => [
+  { rotulo: 'Início dos serviços', pctValor: 30, pagoEm: inicio },
+  { rotulo: 'Aceite da entrega', pctValor: 70, pagoEm: aceite },
+];
 
-  // ⭐ Ronaldo B.: 22 diárias seguidas na Creche, sempre com o mesmo encarregado.
-  for (let d = 0; d < 22; d += 1) {
+const OBJETOS_POR_FRENTE: Record<string, readonly [string, string, number, number][]> = {
+  // frente → [objeto, unidade, quantidade, valor global em centavos]
+  alvenaria: [['Alvenaria de vedação — bloco 14 cm', 'm²', 180, 1_620_000]],
+  reboco: [['Reboco externo', 'm²', 240, 1_440_000]],
+  estrutura: [['Fôrma e armação de pilares', 'm²', 96, 2_880_000]],
+  fundacao: [['Escavação e sapatas', 'm³', 42, 2_100_000]],
+  cobertura: [['Estrutura de cobertura', 'm²', 140, 3_360_000]],
+  hidraulica: [['Instalação hidráulica — bloco B', 'vb', 1, 4_200_000]],
+  eletrica: [['Instalação elétrica — bloco A', 'vb', 1, 5_100_000]],
+  acabamento: [['Assentamento de cerâmica', 'm²', 210, 2_520_000]],
+  terraplanagem: [['Regularização de subleito', 'm²', 1_800, 1_260_000]],
+  base: [['Base de brita graduada', 'm³', 260, 3_900_000]],
+  asfalto: [['Meio-fio e sarjeta', 'm', 420, 1_890_000]],
+  sinalizacao: [['Sinalização horizontal', 'm²', 180, 1_260_000]],
+  demolicao: [['Demolição e remoção de entulho', 'm³', 38, 950_000]],
+};
+
+function objetoDaFrente(frenteId: string, rnd: () => number) {
+  const lista = OBJETOS_POR_FRENTE[frenteId] ?? OBJETOS_POR_FRENTE.alvenaria;
+  const [objeto, unidade, quantidade, valor] = lista[0];
+  // O valor varia ±18% entre contratos, arredondado à dezena de reais.
+  const valorGlobalCents = Math.round((valor * entre(rnd, 0.82, 1.18)) / 1_000) * 1_000;
+  return { objeto, unidade, quantidade, valorGlobalCents };
+}
+
+/**
+ * ⚖️ Sortear obra por PESO, não por igualdade.
+ *
+ * Distribuir compras e empreitas igualmente entre as três obras faria a reforma
+ * de R$ 800 mil consumir tanto quanto a creche de R$ 2,4 milhões — e o custo
+ * real da UBS estouraria o próprio contrato na primeira tela de financeiro.
+ * O peso é o valor do contrato.
+ */
+const PESO_DA_OBRA = OBRAS.map((o) => o.contratoCents);
+const PESO_TOTAL = PESO_DA_OBRA.reduce((a, b) => a + b, 0);
+
+function sorteiaObra(rnd: () => number): Obra {
+  let alvo = rnd() * PESO_TOTAL;
+  for (let i = 0; i < OBRAS.length; i += 1) {
+    alvo -= PESO_DA_OBRA[i];
+    if (alvo <= 0) return OBRAS[i];
+  }
+  return OBRAS[OBRAS.length - 1];
+}
+
+function construirEmpreitas(): Empreita[] {
+  const saida: Empreita[] = [];
+  const rnd = semente(4471);
+  const creche = OBRAS.find((o) => o.id === 'creche')!;
+
+  // ⭐ O CASO DO ALERTA — 11 empreitas seguidas na MESMA obra, sem intervalo,
+  // sempre com o mesmo encarregado recebendo a entrega. É exatamente o padrão
+  // que a régua do jurídico existe para enxergar antes de a ação chegar.
+  const frentesCreche = [
+    'alvenaria',
+    'reboco',
+    'alvenaria',
+    'reboco',
+    'acabamento',
+    'alvenaria',
+    'reboco',
+    'acabamento',
+    'alvenaria',
+    'reboco',
+    'alvenaria',
+  ];
+  let cursor = 74;
+  frentesCreche.forEach((frenteId, i) => {
+    const { objeto, unidade, quantidade, valorGlobalCents } = objetoDaFrente(frenteId, rnd);
+    const prazo = 6;
+    const inicio = diasAtras(cursor);
+    const aceite = diasAtras(Math.max(0, cursor - prazo));
+    const ultima = i === frentesCreche.length - 1;
     saida.push({
-      id: `d-r-${d}`,
-      prestadorId: 'p01',
+      id: `e-c-${i}`,
+      propostaId: `p-c-${i}`,
+      empreiteiroId: 'p01',
       obraId: 'creche',
-      data: diasAtras(d + 1),
-      encarregado: 'Sr. Aparecido',
-      valorCents: 21_000,
+      objeto: `${objeto} — trecho ${i + 1}`,
+      frenteId,
+      unidade,
+      quantidade,
+      valorGlobalCents,
+      prazoDias: prazo,
+      inicio,
+      // Sem intervalo: a seguinte começa no dia em que a anterior é aceita.
+      estado: ultima ? 'em-execucao' : 'quitada',
+      aceitaPor: creche.encarregado,
+      aceiteEm: ultima ? null : aceite,
+      quitacaoEm: ultima ? null : diasAtras(Math.max(0, cursor - prazo - 2)),
+      marcos: MARCOS_PADRAO(inicio, ultima ? null : aceite),
       documento: 'NF-e MEI',
     });
-  }
+    cursor -= prazo;
+  });
 
-  // Marcos T.: 6 diárias espalhadas em 3 obras — o contra-exemplo.
-  const espalhado: ReadonlyArray<readonly [string, number]> = [
-    ['creche', 3], ['ubs', 8], ['pavimentacao', 12],
-    ['ubs', 17], ['creche', 21], ['pavimentacao', 26],
+  // ⭐ O CONTRA-EXEMPLO — empreitas espalhadas em três obras, com intervalo,
+  // recebidas por encarregados diferentes. É o retrato de autonomia real, e a
+  // demonstração precisa dos dois lado a lado para ser honesta.
+  const espalhado: ReadonlyArray<readonly [string, string, number]> = [
+    ['creche', 'estrutura', 8],
+    ['ubs', 'hidraulica', 26],
+    ['pavimentacao', 'base', 44],
+    ['ubs', 'demolicao', 61],
+    ['creche', 'cobertura', 82],
+    ['pavimentacao', 'asfalto', 104],
   ];
-  espalhado.forEach(([obraId, d], i) => {
+  espalhado.forEach(([obraId, frenteId, quandoComecou], i) => {
+    const obra = OBRAS.find((o) => o.id === obraId)!;
+    const { objeto, unidade, quantidade, valorGlobalCents } = objetoDaFrente(frenteId, rnd);
+    const prazo = 9;
+    const emCurso = i === 0;
+    const inicio = diasAtras(quandoComecou);
+    const aceite = diasAtras(Math.max(0, quandoComecou - prazo));
     saida.push({
-      id: `d-m-${i}`,
-      prestadorId: 'p02',
+      id: `e-m-${i}`,
+      propostaId: `p-m-${i}`,
+      empreiteiroId: 'p02',
       obraId,
-      data: diasAtras(d),
-      encarregado: OBRAS.find((o) => o.id === obraId)!.encarregado,
-      valorCents: 24_000,
-      documento: 'RPA',
+      objeto,
+      frenteId,
+      unidade,
+      quantidade,
+      valorGlobalCents,
+      prazoDias: prazo,
+      inicio,
+      estado: emCurso ? 'em-execucao' : 'quitada',
+      aceitaPor: obra.encarregado,
+      aceiteEm: emCurso ? null : aceite,
+      quitacaoEm: emCurso ? null : diasAtras(Math.max(0, quandoComecou - prazo - 3)),
+      marcos: MARCOS_PADRAO(inicio, emCurso ? null : aceite),
+      documento: 'NF-e ME',
     });
   });
 
-  // O resto do canteiro: 3 a 9 diárias por prestador, espalhadas em 30 dias.
-  for (const p of PRESTADORES.slice(2)) {
-    const quantas = Math.floor(entre(rnd, 3, 10));
+  // O resto da carteira de parceiros: 2 a 5 empreitas cada, com intervalo real.
+  for (const p of EMPREITEIROS.slice(2)) {
+    // ⚖️ Uma a três empreitas por parceiro. Mais que isso e a subcontratação
+    // passaria a custar mais que o próprio contrato — o número tem de fechar
+    // com o financeiro, senão a primeira tela de custo desmente a segunda.
+    const quantas = 1 + Math.floor(entre(rnd, 0, 3));
+    let quando = Math.floor(entre(rnd, 3, 20));
     for (let k = 0; k < quantas; k += 1) {
-      const obra = OBRAS[Math.floor(entre(rnd, 0, OBRAS.length))];
+      const obra = sorteiaObra(rnd);
+      const frenteId = obra.frentes[Math.floor(entre(rnd, 0, obra.frentes.length))];
+      const { objeto, unidade, quantidade, valorGlobalCents } = objetoDaFrente(frenteId, rnd);
+      const prazo = Math.floor(entre(rnd, 4, 13));
+      const inicio = diasAtras(quando);
+      const emCurso = k === 0 && rnd() > 0.6;
+      const aceite = diasAtras(Math.max(0, quando - prazo));
       saida.push({
-        id: `d-${p.id}-${k}`,
-        prestadorId: p.id,
+        id: `e-${p.id}-${k}`,
+        propostaId: null,
+        empreiteiroId: p.id,
         obraId: obra.id,
-        data: diasAtras(Math.floor(entre(rnd, 1, 31))),
-        encarregado: obra.encarregado,
-        valorCents: Math.round(entre(rnd, 17_000, 28_000) / 500) * 500,
-        documento: rnd() > 0.5 ? 'NF-e MEI' : 'RPA',
+        objeto,
+        frenteId,
+        unidade,
+        quantidade,
+        valorGlobalCents,
+        prazoDias: prazo,
+        inicio,
+        estado: emCurso ? 'em-execucao' : rnd() > 0.85 ? 'entregue' : 'quitada',
+        aceitaPor: obra.encarregado,
+        aceiteEm: emCurso ? null : aceite,
+        quitacaoEm: emCurso ? null : diasAtras(Math.max(0, quando - prazo - 4)),
+        marcos: MARCOS_PADRAO(inicio, emCurso ? null : aceite),
+        documento: rnd() > 0.45 ? 'NF-e MEI' : 'Recibo de empreitada',
       });
+      // ⭐ Intervalo de verdade entre uma empreita e a próxima — o oposto do
+      // caso de alerta. O piso de 16 dias é maior que o maior prazo possível
+      // (12), então a folga nunca se fecha por acidente da aritmética.
+      quando += prazo + Math.floor(entre(rnd, 16, 40));
     }
   }
 
   return saida;
 }
 
-const DIARIAS: readonly Diaria[] = construirDiarias();
+const EMPREITAS: readonly Empreita[] = construirEmpreitas();
 
 // ─────────────────────────────────────────────────────────────────────────────
-// CHAMADOS — e a recusa, que é a prova de autonomia
+// PROPOSTAS — e a recusa, que é a prova de autonomia
 // ─────────────────────────────────────────────────────────────────────────────
 
-function construirChamados(): Chamado[] {
-  const saida: Chamado[] = [];
+const MOTIVOS_RECUSA = [
+  'Estou com outra empreita até sexta',
+  'Já fechei o mês com outro contratante',
+  'Não trabalho nessa frente',
+  'O prazo não fecha com o meu cronograma',
+  'O valor não cobre o meu custo nesse trecho',
+];
+
+function construirPropostas(): Proposta[] {
+  const saida: Proposta[] = [];
   const rnd = semente(9099);
+  const creche = OBRAS.find((o) => o.id === 'creche')!;
 
-  // O chamado aberto — a cena da Tela 3.
+  // A proposta aberta — a cena da tela de Empreiteiros.
   saida.push({
-    id: 'c-aberto',
+    id: 'p-aberta',
     obraId: 'creche',
+    objeto: 'Reboco externo — fachada leste',
+    frenteId: 'reboco',
     especialidadeId: 'pedreiro',
-    vagas: 4,
-    dataServico: diasAFrente(3),
-    abertoEm: diasAtras(0),
-    encarregado: 'Sr. Aparecido',
+    unidade: 'm²',
+    quantidade: 240,
+    valorGlobalCents: 380_000,
+    prazoDias: 6,
+    inicioPrevisto: diasAFrente(3),
+    abertaEm: diasAtras(0),
+    encarregado: creche.encarregado,
     respostas: [
-      { prestadorId: 'p01', estado: 'aceitou', hora: '13:58', motivo: null },
-      { prestadorId: 'p09', estado: 'aceitou', hora: '14:02', motivo: null },
-      { prestadorId: 'p02', estado: 'recusou', hora: '14:11', motivo: 'Estou em outra obra até sexta' },
-      { prestadorId: 'p17', estado: 'sem-resposta', hora: null, motivo: null },
+      { empreiteiroId: 'p01', estado: 'aceitou', hora: '13:58', motivo: null },
+      { empreiteiroId: 'p09', estado: 'aceitou', hora: '14:02', motivo: null },
+      { empreiteiroId: 'p02', estado: 'recusou', hora: '14:11', motivo: MOTIVOS_RECUSA[0] },
+      { empreiteiroId: 'p17', estado: 'sem-resposta', hora: null, motivo: null },
     ],
   });
 
-  // ⭐ 24 chamados ao Ronaldo, zero recusa — é isso que o alerta enxerga.
-  for (let i = 0; i < 24; i += 1) {
+  // ⭐ 25 propostas ao empreiteiro do caso de alerta, ZERO recusa. É o segundo
+  // sinal que a régua enxerga: quem nunca recusa não está exercendo autonomia.
+  for (let i = 0; i < 25; i += 1) {
     saida.push({
-      id: `c-r-${i}`,
+      id: `p-c-${i}`,
       obraId: 'creche',
+      objeto: `Reboco externo — trecho ${i + 1}`,
+      frenteId: i % 2 === 0 ? 'alvenaria' : 'reboco',
       especialidadeId: 'pedreiro',
-      vagas: 1,
-      dataServico: diasAtras(i + 1),
-      abertoEm: diasAtras(i + 2),
-      encarregado: 'Sr. Aparecido',
-      respostas: [{ prestadorId: 'p01', estado: 'aceitou', hora: '07:12', motivo: null }],
+      unidade: 'm²',
+      quantidade: 180,
+      valorGlobalCents: 300_000,
+      prazoDias: 6,
+      inicioPrevisto: diasAtras(i * 6 + 2),
+      abertaEm: diasAtras(i * 6 + 4),
+      encarregado: creche.encarregado,
+      respostas: [{ empreiteiroId: 'p01', estado: 'aceitou', hora: '07:12', motivo: null }],
     });
   }
 
-  // ⭐ 20 chamados ao Marcos, 9 recusados — o retrato da autonomia real.
-  const motivosRecusa = [
-    'Estou em outra obra', 'Já fechei a semana com outro cliente',
-    'Não trabalho nessa frente', 'Distância inviável para mim',
-  ];
+  // ⭐ 20 propostas ao contra-exemplo, 10 recusadas — 50% de recusa.
   for (let i = 0; i < 20; i += 1) {
-    const recusou = i % 2 === 0 && i < 18;
+    const recusou = i % 2 === 0;
+    const obra = OBRAS[i % OBRAS.length];
     saida.push({
-      id: `c-m-${i}`,
-      obraId: OBRAS[i % OBRAS.length].id,
+      id: `p-m-${i}`,
+      obraId: obra.id,
+      objeto: 'Fôrma e armação de pilares',
+      frenteId: 'estrutura',
       especialidadeId: 'armador',
-      vagas: 1,
-      dataServico: diasAtras(i + 1),
-      abertoEm: diasAtras(i + 2),
-      encarregado: OBRAS[i % OBRAS.length].encarregado,
+      unidade: 'm²',
+      quantidade: 96,
+      valorGlobalCents: 288_000,
+      prazoDias: 9,
+      inicioPrevisto: diasAtras(i * 9 + 2),
+      abertaEm: diasAtras(i * 9 + 4),
+      encarregado: obra.encarregado,
       respostas: [
         {
-          prestadorId: 'p02',
+          empreiteiroId: 'p02',
           estado: recusou ? 'recusou' : 'aceitou',
           hora: recusou ? '08:40' : '06:55',
-          motivo: recusou ? motivosRecusa[i % motivosRecusa.length] : null,
+          motivo: recusou ? MOTIVOS_RECUSA[i % MOTIVOS_RECUSA.length] : null,
         },
       ],
     });
   }
 
-  // Chamados do resto do canteiro, para a lista não parecer encenada.
-  for (let i = 0; i < 40; i += 1) {
-    const p = PRESTADORES[3 + (i % (PRESTADORES.length - 3))];
+  // O resto da carteira, para a lista não parecer encenada.
+  for (let i = 0; i < 46; i += 1) {
+    const p = EMPREITEIROS[3 + (i % (EMPREITEIROS.length - 3))];
     const obra = OBRAS[Math.floor(entre(rnd, 0, OBRAS.length))];
+    const frenteId = obra.frentes[Math.floor(entre(rnd, 0, obra.frentes.length))];
+    const { objeto, unidade, quantidade, valorGlobalCents } = objetoDaFrente(frenteId, rnd);
     const sorte = rnd();
     saida.push({
-      id: `c-g-${i}`,
+      id: `p-g-${i}`,
       obraId: obra.id,
+      objeto,
+      frenteId,
       especialidadeId: p.especialidadeId,
-      vagas: 1,
-      dataServico: diasAtras(Math.floor(entre(rnd, 1, 31))),
-      abertoEm: diasAtras(Math.floor(entre(rnd, 2, 32))),
+      unidade,
+      quantidade,
+      valorGlobalCents,
+      prazoDias: Math.floor(entre(rnd, 4, 13)),
+      inicioPrevisto: diasAtras(Math.floor(entre(rnd, 1, 60))),
+      abertaEm: diasAtras(Math.floor(entre(rnd, 2, 62))),
       encarregado: obra.encarregado,
       respostas: [
         {
-          prestadorId: p.id,
-          estado: sorte > 0.72 ? 'recusou' : sorte > 0.62 ? 'sem-resposta' : 'aceitou',
-          hora: sorte > 0.62 ? '09:20' : '07:05',
-          motivo: sorte > 0.72 ? motivosRecusa[i % motivosRecusa.length] : null,
+          empreiteiroId: p.id,
+          estado: sorte > 0.66 ? 'recusou' : sorte > 0.58 ? 'sem-resposta' : 'aceitou',
+          hora: sorte > 0.58 ? '09:20' : '07:05',
+          motivo: sorte > 0.66 ? MOTIVOS_RECUSA[i % MOTIVOS_RECUSA.length] : null,
         },
       ],
     });
@@ -658,7 +1145,7 @@ function construirChamados(): Chamado[] {
   return saida;
 }
 
-const CHAMADOS: readonly Chamado[] = construirChamados();
+const PROPOSTAS: readonly Proposta[] = construirPropostas();
 
 // ─────────────────────────────────────────────────────────────────────────────
 // DOCUMENTOS — com validade, que é o que trava pagamento e habilitação
@@ -677,24 +1164,87 @@ function construirDocumentos(): Documento[] {
     titularNome: 'A empresa',
     vence: diasAFrente(6),
   });
-  saida.push({ id: 'doc-cnd', tipoId: 'cnd', titularKind: 'empresa', titularId: 'empresa', titularNome: 'A empresa', vence: diasAFrente(74) });
-  saida.push({ id: 'doc-trab', tipoId: 'trabalhista', titularKind: 'empresa', titularId: 'empresa', titularNome: 'A empresa', vence: diasAFrente(41) });
+  saida.push({
+    id: 'doc-cnd',
+    tipoId: 'cnd',
+    titularKind: 'empresa',
+    titularId: 'empresa',
+    titularNome: 'A empresa',
+    vence: diasAFrente(74),
+  });
+  saida.push({
+    id: 'doc-trab',
+    tipoId: 'trabalhista',
+    titularKind: 'empresa',
+    titularId: 'empresa',
+    titularNome: 'A empresa',
+    vence: diasAFrente(41),
+  });
 
   for (const obra of OBRAS) {
-    saida.push({ id: `doc-art-${obra.id}`, tipoId: 'art', titularKind: 'obra', titularId: obra.id, titularNome: obra.nome, vence: diasAFrente(Math.round(entre(rnd, 120, 300))) });
-    saida.push({ id: `doc-cno-${obra.id}`, tipoId: 'cno', titularKind: 'obra', titularId: obra.id, titularNome: obra.nome, vence: diasAFrente(Math.round(entre(rnd, 200, 400))) });
+    saida.push({
+      id: `doc-art-${obra.id}`,
+      tipoId: 'art',
+      titularKind: 'obra',
+      titularId: obra.id,
+      titularNome: obra.nome,
+      vence: diasAFrente(Math.round(entre(rnd, 120, 300))),
+    });
+    saida.push({
+      id: `doc-cno-${obra.id}`,
+      tipoId: 'cno',
+      titularKind: 'obra',
+      titularId: obra.id,
+      titularNome: obra.nome,
+      vence: diasAFrente(Math.round(entre(rnd, 200, 400))),
+    });
   }
 
   // ⭐ 2 ASOs vencendo nesta semana — o maço da NR-18 que o auditor pede.
-  saida.push({ id: 'doc-aso-p01', tipoId: 'aso', titularKind: 'prestador', titularId: 'p01', titularNome: 'Ronaldo B.', vence: diasAFrente(4) });
-  saida.push({ id: 'doc-aso-p09', tipoId: 'aso', titularKind: 'prestador', titularId: 'p09', titularNome: PRESTADORES[8].nome, vence: diasAFrente(5) });
+  saida.push({
+    id: 'doc-aso-p01',
+    tipoId: 'aso',
+    titularKind: 'empreiteiro',
+    titularId: 'p01',
+    titularNome: 'Ronaldo B.',
+    vence: diasAFrente(4),
+  });
+  saida.push({
+    id: 'doc-aso-p09',
+    tipoId: 'aso',
+    titularKind: 'empreiteiro',
+    titularId: 'p09',
+    titularNome: EMPREITEIROS[8].nome,
+    vence: diasAFrente(5),
+  });
   // Um já vencido — a demo precisa mostrar o estado ruim, não só o quase-ruim.
-  saida.push({ id: 'doc-nr35-p17', tipoId: 'nr35', titularKind: 'prestador', titularId: 'p17', titularNome: PRESTADORES[16].nome, vence: diasAtras(9) });
+  saida.push({
+    id: 'doc-nr35-p17',
+    tipoId: 'nr35',
+    titularKind: 'empreiteiro',
+    titularId: 'p17',
+    titularNome: EMPREITEIROS[16].nome,
+    vence: diasAtras(9),
+  });
 
-  for (const p of PRESTADORES.slice(2)) {
-    saida.push({ id: `doc-aso-${p.id}`, tipoId: 'aso', titularKind: 'prestador', titularId: p.id, titularNome: p.nome, vence: diasAFrente(Math.round(entre(rnd, 30, 330))) });
+  for (const p of EMPREITEIROS.slice(2)) {
+    saida.push({
+      id: `doc-aso-${p.id}`,
+      tipoId: 'aso',
+      titularKind: 'empreiteiro',
+      titularId: p.id,
+      titularNome: p.nome,
+      vence: diasAFrente(Math.round(entre(rnd, 30, 330))),
+    });
     if (rnd() > 0.5) {
-      saida.push({ id: `doc-nr18-${p.id}`, tipoId: 'nr18', titularKind: 'prestador', titularId: p.id, titularNome: p.nome, vence: diasAFrente(Math.round(entre(rnd, 20, 400))) });
+      saida.push({
+        id: `doc-nr18-${p.id}`,
+        tipoId: 'nr18',
+        titularKind: 'empreiteiro',
+        titularId: p.id,
+        titularNome: p.nome,
+        vence: diasAFrente(Math.round(entre(rnd, 20, 400))),
+      });
     }
   }
 
@@ -714,7 +1264,7 @@ const OBSERVACOES: readonly string[] = [
   'Fiscal conferiu a armação da viga V12 e liberou a concretagem.',
   'Servente escorregou na rampa molhada, sem lesão. Rampa isolada e sinalizada.',
   'Betoneira parada por defeito no motor; manutenção acionada.',
-  'Equipe reduzida — dois prestadores não compareceram.',
+  'Equipe reduzida — dois parceiros de empreita não compareceram.',
   'Início da frente de instalação hidráulica no bloco B.',
   'Descarga de 42 t de CBUQ; compactação dentro do previsto.',
   'Visita da equipe de segurança do trabalho; três apontamentos registrados.',
@@ -740,7 +1290,8 @@ function construirDiario(): EntradaDiario[] {
       else if (sorte > 0.74) motivos.push('visita-fiscal');
       else if (sorte > 0.68) motivos.push('efetivo-abaixo');
       if (d === 11 && obra.id === 'creche') motivos.push('quase-acidente');
-      if (motivos.length === 0) motivos.push(MOTIVOS_DE_OCORRENCIA[Math.floor(entre(rnd, 0, 3))].id);
+      if (motivos.length === 0)
+        motivos.push(MOTIVOS_DE_OCORRENCIA[Math.floor(entre(rnd, 0, 3))].id);
 
       const gravidadeId = motivos.includes('quase-acidente')
         ? 'paralisa'
@@ -754,7 +1305,13 @@ function construirDiario(): EntradaDiario[] {
         data: diasAtras(d),
         hora: `${String(Math.floor(entre(rnd, 7, 18))).padStart(2, '0')}:${String(Math.floor(entre(rnd, 0, 6)) * 10).padStart(2, '0')}`,
         autor: obra.encarregado,
-        climaId: chuva ? (rnd() > 0.5 ? 'chuva-forte' : 'chuva-fraca') : rnd() > 0.5 ? 'sol' : 'nublado',
+        climaId: chuva
+          ? rnd() > 0.5
+            ? 'chuva-forte'
+            : 'chuva-fraca'
+          : rnd() > 0.5
+            ? 'sol'
+            : 'nublado',
         frenteId: obra.frentes[Math.floor(entre(rnd, 0, obra.frentes.length))] ?? FRENTES[0].id,
         efetivo: Math.floor(entre(rnd, 6, 22)),
         motivos,
@@ -783,10 +1340,760 @@ function construirDiario(): EntradaDiario[] {
     cancelada: { motivo: 'Registro lançado na obra errada', em: diasAtras(6), por: 'Sr. Nivaldo' },
   });
 
-  return saida.sort((a, b) => (a.data === b.data ? b.hora.localeCompare(a.hora) : b.data.localeCompare(a.data)));
+  return saida.sort((a, b) =>
+    a.data === b.data ? b.hora.localeCompare(a.hora) : b.data.localeCompare(a.data),
+  );
 }
 
 const DIARIO: readonly EntradaDiario[] = construirDiario();
+
+// ─────────────────────────────────────────────────────────────────────────────
+// v2 — OS DADOS DAS SALAS NOVAS
+// Tudo fictício, tudo coerente com as MESMAS 3 obras e a MESMA data de
+// referência. Nenhuma sala nasce vazia; nenhuma inventa uma quarta obra.
+// ─────────────────────────────────────────────────────────────────────────────
+
+const CONTRATOS: readonly ContratoPublico[] = [
+  {
+    id: 'ct-creche',
+    obraId: 'creche',
+    numero: '041/2026',
+    objeto: 'Construção de creche municipal — 6 salas, 480 m²',
+    modalidade: 'Concorrência',
+    assinadoEm: diasAtras(162),
+    ordemDeServicoEm: diasAtras(150),
+    prazoDias: 360,
+    valorOriginalCents: 240_000_000,
+    garantiaPct: 5,
+  },
+  {
+    id: 'ct-pavimentacao',
+    obraId: 'pavimentacao',
+    numero: '128/2025',
+    objeto: 'Pavimentação asfáltica e drenagem — 24.800 m²',
+    modalidade: 'Concorrência',
+    assinadoEm: diasAtras(372),
+    ordemDeServicoEm: diasAtras(360),
+    prazoDias: 360,
+    valorOriginalCents: 185_000_000,
+    garantiaPct: 5,
+  },
+  {
+    id: 'ct-ubs',
+    obraId: 'ubs',
+    numero: '007/2026',
+    objeto: 'Reforma de unidade básica de saúde — 320 m²',
+    modalidade: 'Pregão eletrônico',
+    assinadoEm: diasAtras(104),
+    ordemDeServicoEm: diasAtras(95),
+    prazoDias: 180,
+    valorOriginalCents: 80_000_000,
+    garantiaPct: 5,
+  },
+];
+
+/**
+ * ⭐ Os aditivos da Pavimentação somam 22,4% — o número que o Funcionário
+ * Digital compara com o teto de acréscimo em obra. A conclusão sobre o contrato
+ * é do jurídico; o sistema só faz a conta do que registrou.
+ */
+const ADITIVOS: readonly Aditivo[] = [
+  {
+    id: 'ad-p1',
+    contratoId: 'ct-pavimentacao',
+    numero: '1º TA',
+    tipoId: 'valor-acrescimo',
+    assinadoEm: diasAtras(250),
+    valorCents: 18_500_000,
+    prazoDias: 0,
+    justificativa: 'Acréscimo de 3.100 m² de área pavimentada em duas ruas anexas.',
+  },
+  {
+    id: 'ad-p2',
+    contratoId: 'ct-pavimentacao',
+    numero: '2º TA',
+    tipoId: 'prazo',
+    assinadoEm: diasAtras(180),
+    valorCents: 0,
+    prazoDias: 60,
+    justificativa: 'Período chuvoso acima da média histórica impediu a capa asfáltica.',
+  },
+  {
+    id: 'ad-p3',
+    contratoId: 'ct-pavimentacao',
+    numero: '3º TA',
+    tipoId: 'reequilibrio',
+    assinadoEm: diasAtras(96),
+    valorCents: 22_940_000,
+    prazoDias: 0,
+    justificativa: 'Recomposição por variação do preço do ligante asfáltico.',
+  },
+  {
+    id: 'ad-c1',
+    contratoId: 'ct-creche',
+    numero: '1º TA',
+    tipoId: 'valor-acrescimo',
+    assinadoEm: diasAtras(72),
+    valorCents: 20_160_000,
+    prazoDias: 30,
+    justificativa: 'Inclusão de playground e adequação de acessibilidade.',
+  },
+];
+
+const OFICIOS: readonly Oficio[] = [
+  {
+    id: 'of-1',
+    obraId: 'creche',
+    numero: 'OF 214/2026',
+    tipoId: 'exigencia',
+    direcao: 'recebido',
+    assunto: 'Apresentar ART de execução da estrutura metálica da cobertura',
+    em: diasAtras(9),
+    prazoResposta: diasAFrente(1),
+    respondidoEm: null,
+    estado: 'recebido',
+    responsavel: 'Escritório técnico',
+  },
+  {
+    id: 'of-2',
+    obraId: 'pavimentacao',
+    numero: 'OF 189/2026',
+    tipoId: 'notificacao',
+    direcao: 'recebido',
+    assunto: 'Sinalização de desvio insuficiente no trecho da Rua 7',
+    em: diasAtras(24),
+    prazoResposta: diasAtras(17),
+    respondidoEm: diasAtras(19),
+    estado: 'respondido',
+    responsavel: 'Sr. Nivaldo',
+  },
+  {
+    id: 'of-3',
+    obraId: 'ubs',
+    numero: 'OF 032/2026',
+    tipoId: 'solicitacao',
+    direcao: 'recebido',
+    assunto: 'Envio da CND e da certidão de FGTS atualizadas',
+    em: diasAtras(5),
+    prazoResposta: diasAFrente(5),
+    respondidoEm: null,
+    estado: 'recebido',
+    responsavel: 'Financeiro',
+  },
+  {
+    id: 'of-4',
+    obraId: 'creche',
+    numero: 'CT 018/2026',
+    tipoId: 'resposta',
+    direcao: 'enviado',
+    assunto: 'Resposta à exigência de detalhamento do projeto hidráulico',
+    em: diasAtras(31),
+    prazoResposta: null,
+    respondidoEm: diasAtras(31),
+    estado: 'arquivado',
+    responsavel: 'Escritório técnico',
+  },
+  {
+    id: 'of-5',
+    obraId: 'pavimentacao',
+    numero: 'OF 151/2026',
+    tipoId: 'exigencia',
+    direcao: 'recebido',
+    assunto: 'Refazimento do trecho com desnível fora de tolerância',
+    em: diasAtras(58),
+    prazoResposta: diasAtras(48),
+    respondidoEm: null,
+    estado: 'vencido',
+    responsavel: 'Sr. Nivaldo',
+  },
+  {
+    id: 'of-6',
+    obraId: 'ubs',
+    numero: 'CT 009/2026',
+    tipoId: 'comunicado',
+    direcao: 'enviado',
+    assunto: 'Comunicação de paralisação por chuva — 2 dias',
+    em: diasAtras(12),
+    prazoResposta: null,
+    respondidoEm: diasAtras(12),
+    estado: 'arquivado',
+    responsavel: 'Sr. Genésio',
+  },
+];
+
+const VISITAS: readonly VisitaDeFiscal[] = [
+  {
+    id: 'v-1',
+    obraId: 'creche',
+    em: diasAtras(4),
+    fiscal: 'eng. A. Moreira',
+    constatacao: 'Conferiu a armação da viga V12 e liberou a concretagem do trecho.',
+    exigencias: 0,
+  },
+  {
+    id: 'v-2',
+    obraId: 'creche',
+    em: diasAtras(19),
+    fiscal: 'eng. A. Moreira',
+    constatacao: 'Apontou divergência de quantidade na alvenaria do bloco B.',
+    exigencias: 1,
+  },
+  {
+    id: 'v-3',
+    obraId: 'pavimentacao',
+    em: diasAtras(11),
+    fiscal: 'eng.ª R. Caldas',
+    constatacao: 'Coleta de amostra do CBUQ para ensaio; aguarda laudo.',
+    exigencias: 1,
+  },
+  {
+    id: 'v-4',
+    obraId: 'ubs',
+    em: diasAtras(7),
+    fiscal: 'arq. D. Peixoto',
+    constatacao: 'Vistoria de acessibilidade nas rampas; conforme ao projeto.',
+    exigencias: 0,
+  },
+  {
+    id: 'v-5',
+    obraId: 'pavimentacao',
+    em: diasAtras(58),
+    fiscal: 'eng.ª R. Caldas',
+    constatacao: 'Desnível fora de tolerância no trecho da Rua 7.',
+    exigencias: 2,
+  },
+];
+
+const COLABORADORES: readonly Colaborador[] = [
+  {
+    id: 'cl-1',
+    nome: 'Aparecido S.',
+    funcao: 'Encarregado de obra',
+    obraId: 'creche',
+    admitidoEm: diasAtras(880),
+    estado: 'ativo',
+  },
+  {
+    id: 'cl-2',
+    nome: 'Nivaldo P.',
+    funcao: 'Encarregado de obra',
+    obraId: 'pavimentacao',
+    admitidoEm: diasAtras(1240),
+    estado: 'ativo',
+  },
+  {
+    id: 'cl-3',
+    nome: 'Genésio A.',
+    funcao: 'Encarregado de obra',
+    obraId: 'ubs',
+    admitidoEm: diasAtras(640),
+    estado: 'ativo',
+  },
+  {
+    id: 'cl-4',
+    nome: 'Lúcia R.',
+    funcao: 'Técnica de segurança do trabalho',
+    obraId: 'creche',
+    admitidoEm: diasAtras(410),
+    estado: 'ativo',
+  },
+  {
+    id: 'cl-5',
+    nome: 'Wilson M.',
+    funcao: 'Almoxarife',
+    obraId: 'creche',
+    admitidoEm: diasAtras(300),
+    estado: 'ativo',
+  },
+  {
+    id: 'cl-6',
+    nome: 'Tereza C.',
+    funcao: 'Auxiliar administrativo de obra',
+    obraId: 'pavimentacao',
+    admitidoEm: diasAtras(220),
+    estado: 'ativo',
+  },
+  {
+    id: 'cl-7',
+    nome: 'Hélio B.',
+    funcao: 'Operador de máquina',
+    obraId: 'pavimentacao',
+    admitidoEm: diasAtras(510),
+    estado: 'afastado',
+  },
+  {
+    id: 'cl-8',
+    nome: 'Iracema D.',
+    funcao: 'Engenheira residente',
+    obraId: 'ubs',
+    admitidoEm: diasAtras(150),
+    estado: 'ativo',
+  },
+];
+
+function construirTreinamentos(): Treinamento[] {
+  const rnd = semente(5511);
+  const cursos: ReadonlyArray<readonly [string, number, number]> = [
+    ['NR-18 — condições no canteiro', 8, 730],
+    ['NR-35 — trabalho em altura', 8, 730],
+    ['NR-10 — segurança em eletricidade', 40, 730],
+    ['DDS — uso e guarda de EPI', 2, 365],
+    ['Primeiros socorros no canteiro', 4, 365],
+  ];
+  const saida: Treinamento[] = [];
+  COLABORADORES.forEach((c, i) => {
+    cursos.slice(0, 2 + (i % 3)).forEach(([nome, horas, validade], k) => {
+      const quando = Math.floor(entre(rnd, 40, 600));
+      saida.push({
+        id: `tr-${c.id}-${k}`,
+        colaboradorId: c.id,
+        nome,
+        em: diasAtras(quando),
+        cargaHoras: horas,
+        validoAte: diasAFrente(validade - quando),
+      });
+    });
+  });
+  return saida;
+}
+const TREINAMENTOS: readonly Treinamento[] = construirTreinamentos();
+
+function construirEpis(): EntregaDeEpi[] {
+  const rnd = semente(6622);
+  const itens = [
+    'Capacete classe B',
+    'Bota de segurança',
+    'Luva de vaqueta',
+    'Óculos de proteção',
+    'Cinturão paraquedista',
+    'Protetor auricular',
+  ];
+  const saida: EntregaDeEpi[] = [];
+  COLABORADORES.forEach((c, i) => {
+    itens.slice(0, 3 + (i % 3)).forEach((item, k) => {
+      saida.push({
+        id: `epi-c-${c.id}-${k}`,
+        pessoaId: c.id,
+        pessoaNome: c.nome,
+        item,
+        em: diasAtras(Math.floor(entre(rnd, 5, 300))),
+        assinado: rnd() > 0.12,
+      });
+    });
+  });
+  EMPREITEIROS.slice(0, 12).forEach((p, i) => {
+    itens.slice(0, 2 + (i % 3)).forEach((item, k) => {
+      saida.push({
+        id: `epi-e-${p.id}-${k}`,
+        pessoaId: p.id,
+        pessoaNome: p.nome,
+        item,
+        em: diasAtras(Math.floor(entre(rnd, 2, 120))),
+        assinado: rnd() > 0.2,
+      });
+    });
+  });
+  return saida;
+}
+const EPIS: readonly EntregaDeEpi[] = construirEpis();
+
+const FORNECEDORES: readonly Fornecedor[] = [
+  {
+    id: 'f-1',
+    nome: 'Concrebase Usinagem',
+    familiaId: 'concreto',
+    cidade: 'Serra Azul',
+    avaliacao: 88,
+    prazoMedioDias: 2,
+    estado: 'ativo',
+  },
+  {
+    id: 'f-2',
+    nome: 'Ferro & Cia Distribuidora',
+    familiaId: 'aco',
+    cidade: 'Vila Aurora',
+    avaliacao: 74,
+    prazoMedioDias: 9,
+    estado: 'ativo',
+  },
+  {
+    id: 'f-3',
+    nome: 'Asfaltec Massa Asfáltica',
+    familiaId: 'asfalto',
+    cidade: 'Porto Cristalino',
+    avaliacao: 91,
+    prazoMedioDias: 3,
+    estado: 'ativo',
+  },
+  {
+    id: 'f-4',
+    nome: 'Cerâmica Vale Norte',
+    familiaId: 'ceramica',
+    cidade: 'Serra Azul',
+    avaliacao: 69,
+    prazoMedioDias: 12,
+    estado: 'ativo',
+  },
+  {
+    id: 'f-5',
+    nome: 'Elétrica Central',
+    familiaId: 'eletrico',
+    cidade: 'Vila Aurora',
+    avaliacao: 82,
+    prazoMedioDias: 5,
+    estado: 'ativo',
+  },
+  {
+    id: 'f-6',
+    nome: 'Hidrotudo Materiais',
+    familiaId: 'hidraulico',
+    cidade: 'Serra Azul',
+    avaliacao: 77,
+    prazoMedioDias: 6,
+    estado: 'ativo',
+  },
+  {
+    id: 'f-7',
+    nome: 'Madeireira Cerrado',
+    familiaId: 'madeira',
+    cidade: 'Porto Cristalino',
+    avaliacao: 85,
+    prazoMedioDias: 4,
+    estado: 'ativo',
+  },
+  {
+    id: 'f-8',
+    nome: 'Protege EPI',
+    familiaId: 'epi',
+    cidade: 'Vila Aurora',
+    avaliacao: 94,
+    prazoMedioDias: 3,
+    estado: 'ativo',
+  },
+  {
+    id: 'f-9',
+    nome: 'Britagem Rio Claro',
+    familiaId: 'asfalto',
+    cidade: 'Serra Azul',
+    avaliacao: 58,
+    prazoMedioDias: 15,
+    estado: 'arquivado',
+  },
+];
+
+const CATALOGO: ReadonlyArray<readonly [string, string, string, number, number]> = [
+  // família, descrição, unidade, quantidade típica, preço unitário em centavos
+  ['concreto', 'Concreto usinado fck 25 MPa', 'm³', 24, 61_200],
+  ['concreto', 'Cimento CP-II 50 kg', 'sc', 120, 4_180],
+  ['aco', 'Aço CA-50 10 mm', 'kg', 1_800, 1_180],
+  ['aco', 'Tela soldada Q-196', 'm²', 320, 3_640],
+  ['asfalto', 'CBUQ faixa C', 't', 90, 89_400],
+  ['asfalto', 'Brita graduada simples', 'm³', 180, 14_800],
+  ['ceramica', 'Piso cerâmico 60×60 PEI-5', 'm²', 240, 9_620],
+  ['eletrico', 'Cabo flexível 2,5 mm²', 'm', 900, 480],
+  ['hidraulico', 'Tubo PVC soldável 50 mm', 'm', 240, 1_860],
+  ['madeira', 'Compensado plastificado 18 mm', 'ch', 60, 18_900],
+  ['epi', 'Capacete classe B com jugular', 'un', 30, 4_200],
+];
+
+function construirCompras(): Compra[] {
+  const rnd = semente(7733);
+  const saida: Compra[] = [];
+  for (let i = 0; i < 42; i += 1) {
+    const obra = sorteiaObra(rnd);
+    const [familiaId, descricao, unidade, qtdBase, preco] = CATALOGO[i % CATALOGO.length];
+    const quantidade = Math.round(qtdBase * entre(rnd, 0.6, 1.5));
+    const candidatos = FORNECEDORES.filter(
+      (f) => f.familiaId === familiaId && f.estado === 'ativo',
+    );
+    const cotacoes = (candidatos.length > 0 ? candidatos : FORNECEDORES.slice(0, 3))
+      .slice(0, 3)
+      .map((f) => ({
+        fornecedorId: f.id,
+        valorCents: Math.round((quantidade * preco * entre(rnd, 0.92, 1.14)) / 1_000) * 1_000,
+      }));
+    const melhor = [...cotacoes].sort((a, b) => a.valorCents - b.valorCents)[0];
+    const sorte = rnd();
+    const estado: EstadoCompra =
+      sorte > 0.88
+        ? 'requisitada'
+        : sorte > 0.78
+          ? 'cotando'
+          : sorte > 0.62
+            ? 'pedida'
+            : sorte > 0.06
+              ? 'recebida'
+              : 'cancelada';
+    const requisitadaEm = diasAtras(Math.floor(entre(rnd, 1, 120)));
+    saida.push({
+      id: `co-${i}`,
+      obraId: obra.id,
+      familiaId,
+      descricao,
+      unidade,
+      quantidade,
+      requisitadaEm,
+      requisitadaPor: obra.encarregado,
+      estado,
+      cotacoes,
+      fornecedorEscolhido:
+        estado === 'requisitada' || estado === 'cotando' ? null : melhor.fornecedorId,
+      valorCents: estado === 'requisitada' || estado === 'cotando' ? 0 : melhor.valorCents,
+      recebidaEm:
+        estado === 'recebida'
+          ? diasAtras(Math.max(0, diasDesde(requisitadaEm) - Math.floor(entre(rnd, 2, 14))))
+          : null,
+      // ⭐ A divergência de recebimento: o que chegou a menos do que foi pedido.
+      divergencia:
+        estado === 'recebida' && rnd() > 0.78
+          ? -Math.round(quantidade * entre(rnd, 0.03, 0.12))
+          : 0,
+      motivoCancelamento: estado === 'cancelada' ? 'Serviço remanejado para outra frente' : null,
+    });
+  }
+  return saida;
+}
+const COMPRAS: readonly Compra[] = construirCompras();
+
+const EQUIPAMENTOS: readonly Equipamento[] = [
+  {
+    id: 'eq-1',
+    nome: 'Betoneira 400 L',
+    patrimonio: 'BT-014',
+    obraId: 'creche',
+    desde: diasAtras(140),
+    horimetro: 1_842,
+    proximaManutencaoHoras: 1_900,
+    estado: 'operando',
+  },
+  {
+    id: 'eq-2',
+    nome: 'Rolo compactador CA-15',
+    patrimonio: 'RC-003',
+    obraId: 'pavimentacao',
+    desde: diasAtras(310),
+    horimetro: 4_610,
+    proximaManutencaoHoras: 4_500,
+    estado: 'manutencao',
+  },
+  {
+    id: 'eq-3',
+    nome: 'Caminhão basculante 6 m³',
+    patrimonio: 'CB-021',
+    obraId: 'pavimentacao',
+    desde: diasAtras(300),
+    horimetro: 8_930,
+    proximaManutencaoHoras: 9_200,
+    estado: 'operando',
+  },
+  {
+    id: 'eq-4',
+    nome: 'Retroescavadeira',
+    patrimonio: 'RT-007',
+    obraId: 'creche',
+    desde: diasAtras(88),
+    horimetro: 6_204,
+    proximaManutencaoHoras: 6_400,
+    estado: 'operando',
+  },
+  {
+    id: 'eq-5',
+    nome: 'Andaime tubular — 40 m',
+    patrimonio: 'AN-052',
+    obraId: 'ubs',
+    desde: diasAtras(70),
+    horimetro: 0,
+    proximaManutencaoHoras: 0,
+    estado: 'operando',
+  },
+  {
+    id: 'eq-6',
+    nome: 'Vibrador de imersão',
+    patrimonio: 'VI-011',
+    obraId: 'creche',
+    desde: diasAtras(140),
+    horimetro: 912,
+    proximaManutencaoHoras: 800,
+    estado: 'parado',
+  },
+  {
+    id: 'eq-7',
+    nome: 'Placa vibratória',
+    patrimonio: 'PV-009',
+    obraId: 'ubs',
+    desde: diasAtras(60),
+    horimetro: 1_120,
+    proximaManutencaoHoras: 1_400,
+    estado: 'operando',
+  },
+];
+
+function construirCustos(): CustoDaObra[] {
+  const rnd = semente(8844);
+  const saida: CustoDaObra[] = [];
+  // O custo real da obra é a soma do que ela consumiu: compras recebidas,
+  // empreitas quitadas, folha da equipe própria e hora de equipamento.
+  for (const c of COMPRAS.filter((x) => x.estado === 'recebida')) {
+    saida.push({
+      id: `cu-co-${c.id}`,
+      obraId: c.obraId,
+      familiaId: c.familiaId,
+      descricao: c.descricao,
+      em: c.recebidaEm!,
+      valorCents: c.valorCents,
+      origem: 'compra',
+    });
+  }
+  for (const e of EMPREITAS.filter((x) => x.estado === 'quitada')) {
+    saida.push({
+      id: `cu-e-${e.id}`,
+      obraId: e.obraId,
+      familiaId: 'madeira',
+      descricao: `Empreita — ${e.objeto}`,
+      em: e.quitacaoEm!,
+      valorCents: e.valorGlobalCents,
+      origem: 'empreita',
+    });
+  }
+  for (const obra of OBRAS) {
+    for (let m = 0; m < 6; m += 1) {
+      const escala = obra.contratoCents / PESO_TOTAL;
+      saida.push({
+        id: `cu-f-${obra.id}-${m}`,
+        obraId: obra.id,
+        familiaId: 'epi',
+        descricao: 'Folha da equipe própria',
+        em: diasAtras(m * 30 + 5),
+        valorCents: Math.round((entre(rnd, 3_600_000, 5_600_000) * escala) / 10_000) * 10_000,
+        origem: 'folha',
+      });
+    }
+  }
+  for (const eq of EQUIPAMENTOS) {
+    saida.push({
+      id: `cu-eq-${eq.id}`,
+      obraId: eq.obraId,
+      familiaId: 'madeira',
+      descricao: `Operação e manutenção — ${eq.nome}`,
+      em: diasAtras(Math.floor(entre(rnd, 5, 90))),
+      valorCents: Math.round(entre(rnd, 400_000, 2_400_000) / 10_000) * 10_000,
+      origem: 'equipamento',
+    });
+  }
+  return saida;
+}
+const CUSTOS: readonly CustoDaObra[] = construirCustos();
+
+function construirContas(): ContaAPagar[] {
+  const rnd = semente(9955);
+  const saida: ContaAPagar[] = [];
+  COMPRAS.filter((c) => c.estado === 'pedida' || c.estado === 'recebida').forEach((c, i) => {
+    const forn = FORNECEDORES.find((f) => f.id === c.fornecedorEscolhido);
+    const vence = diasAtras(Math.floor(entre(rnd, -25, 40)));
+    saida.push({
+      id: `cp-${i}`,
+      obraId: c.obraId,
+      favorecido: forn?.nome ?? 'Fornecedor',
+      descricao: c.descricao,
+      vence,
+      valorCents: c.valorCents,
+      pagoEm: diasDesde(vence) > 0 && rnd() > 0.25 ? vence : null,
+    });
+  });
+  EMPREITAS.filter((e) => e.estado === 'entregue').forEach((e, i) => {
+    const emp = EMPREITEIROS.find((p) => p.id === e.empreiteiroId);
+    saida.push({
+      id: `cp-e-${i}`,
+      obraId: e.obraId,
+      favorecido: emp?.nome ?? 'Empreiteiro',
+      descricao: `Parcela de aceite — ${e.objeto}`,
+      vence: diasAFrente(Math.floor(entre(rnd, 1, 20))),
+      valorCents: Math.round(e.valorGlobalCents * 0.7),
+      pagoEm: null,
+    });
+  });
+  return saida;
+}
+const CONTAS: readonly ContaAPagar[] = construirContas();
+
+function construirPendencias(): Pendencia[] {
+  const saida: Pendencia[] = [];
+  for (const o of OFICIOS.filter((x) => x.estado === 'recebido' || x.estado === 'vencido')) {
+    saida.push({
+      id: `pd-of-${o.id}`,
+      setorId: 'obras',
+      obraId: o.obraId,
+      titulo: `Responder ${o.numero} — ${o.assunto}`,
+      abertaEm: o.em,
+      responsavel: o.responsavel,
+    });
+  }
+  for (const c of COMPRAS.filter((x) => x.estado === 'requisitada' || x.estado === 'cotando')) {
+    saida.push({
+      id: `pd-co-${c.id}`,
+      setorId: 'suprimentos',
+      obraId: c.obraId,
+      titulo: `${c.estado === 'cotando' ? 'Fechar cotação' : 'Cotar'} — ${c.descricao}`,
+      abertaEm: c.requisitadaEm,
+      responsavel: 'Suprimentos',
+    });
+  }
+  for (const c of COMPRAS.filter((x) => x.divergencia !== 0)) {
+    saida.push({
+      id: `pd-dv-${c.id}`,
+      setorId: 'suprimentos',
+      obraId: c.obraId,
+      titulo: `Tratar divergência de recebimento — ${c.descricao}`,
+      abertaEm: c.recebidaEm!,
+      responsavel: 'Almoxarifado',
+    });
+  }
+  for (const d of DOCUMENTOS.filter((x) => diasAte(x.vence) <= 15)) {
+    saida.push({
+      id: `pd-doc-${d.id}`,
+      setorId: 'documentos',
+      obraId: d.titularKind === 'obra' ? d.titularId : null,
+      titulo: `Renovar documento de ${d.titularNome}`,
+      abertaEm: diasAtras(10),
+      responsavel: 'Documentos',
+    });
+  }
+  for (const e of EQUIPAMENTOS.filter((x) => x.estado !== 'operando')) {
+    saida.push({
+      id: `pd-eq-${e.id}`,
+      setorId: 'suprimentos',
+      obraId: e.obraId,
+      titulo: `Equipamento ${e.estado === 'parado' ? 'parado' : 'em manutenção'} — ${e.nome}`,
+      abertaEm: diasAtras(e.estado === 'parado' ? 22 : 6),
+      responsavel: 'Manutenção',
+    });
+  }
+  for (const m of MEDICOES.filter((x) => x.aceitoCents > 0 && x.pagoCents === 0)) {
+    saida.push({
+      id: `pd-me-${m.id}`,
+      setorId: 'financeiro',
+      obraId: m.obraId,
+      titulo: `Cobrar pagamento da medição ${m.numero}`,
+      abertaEm: m.dataAceite!,
+      responsavel: 'Financeiro',
+    });
+  }
+  for (const f of OBRAS) {
+    const semDiario = DIARIO.filter((d) => d.obraId === f.id && d.cancelada === null);
+    if (semDiario.length > 0 && diasDesde(semDiario[0].data) >= 3) {
+      saida.push({
+        id: `pd-di-${f.id}`,
+        setorId: 'obras',
+        obraId: f.id,
+        titulo: `Diário de obra em atraso — ${f.nome}`,
+        abertaEm: semDiario[0].data,
+        responsavel: f.encarregado,
+      });
+    }
+  }
+  return saida;
+}
+const PENDENCIAS: readonly Pendencia[] = construirPendencias();
 
 // ─────────────────────────────────────────────────────────────────────────────
 // O MUNDO
@@ -798,11 +2105,30 @@ export const MUNDO: Mundo = {
   itens: ITENS,
   medicoes: MEDICOES,
   consumos: CONSUMOS,
-  prestadores: PRESTADORES,
+  empreiteiros: EMPREITEIROS,
   documentos: DOCUMENTOS,
-  diarias: DIARIAS,
-  chamados: CHAMADOS,
+  empreitas: EMPREITAS,
+  propostas: PROPOSTAS,
   diario: DIARIO,
-  // ⚖️ Valor de EXEMPLO. Quem define é o jurídico da empresa — a tela diz isso.
-  reguaVinculo: { diarias: 20, janelaDias: 30 },
+  contratos: CONTRATOS,
+  aditivos: ADITIVOS,
+  oficios: OFICIOS,
+  visitas: VISITAS,
+  colaboradores: COLABORADORES,
+  treinamentos: TREINAMENTOS,
+  episEntregues: EPIS,
+  fornecedores: FORNECEDORES,
+  compras: COMPRAS,
+  equipamentos: EQUIPAMENTOS,
+  custos: CUSTOS,
+  contasAPagar: CONTAS,
+  pendencias: PENDENCIAS,
+  // ⚖️ Valores de EXEMPLO, os quatro. Quem define é o jurídico da empresa — e a
+  // tela de Configurações diz isso com todas as letras.
+  reguaConcentracao: {
+    empreitasConsecutivas: 8,
+    diasSemIntervalo: 25,
+    pctRecusaMinimo: 10,
+    outrasEmpresasMinimo: 1,
+  },
 };

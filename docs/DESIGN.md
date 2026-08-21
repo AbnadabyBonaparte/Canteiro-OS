@@ -102,7 +102,7 @@ E as duas cores extras vêm **do próprio canteiro**, não de uma paleta de SaaS
 ├────────────┬─────────────────────────────────────────────────────────────┤
 │ Painel     │  ╔═══════════════════════════════════════════════════════╗  │
 │ Diário     │  ║  DINHEIRO PRESO                                       ║  │
-│ Diaristas  │  ║  R$ 486.900              aceito pelo fiscal, não pago ║  │
+│ Empreiteir.│  ║  R$ 486.900              aceito pelo fiscal, não pago ║  │
 │ Medições   │  ║  ┌───────────────────────────────────────────────┐    ║  │
 │ Funcionário│  ║  │ Medição 4 · Creche Jardim Alto                │    ║  │
 │  digital   │  ║  │ R$ 212.400            aprovada há  ▸ 18 dias  │    ║  │
@@ -123,7 +123,7 @@ E as duas cores extras vêm **do próprio canteiro**, não de uma paleta de SaaS
 │            │                                                             │
 │            │  VENCE ESTA SEMANA                                          │
 │            │  ▸ Certidão de FGTS ......................... 6 dias  ⚠     │
-│            │  ▸ ASO · 3 prestadores ...................... 4 dias  ⚠     │
+│            │  ▸ ASO · 3 empreiteiros ..................... 4 dias  ⚠     │
 │            │  ▸ Prazo do aditivo · Pavimentação .......... 9 dias        │
 ├────────────┴─────────────────────────────────────────────────────────────┤
 │ Ambiente de demonstração · dados fictícios                               │
@@ -177,36 +177,43 @@ E as duas cores extras vêm **do próprio canteiro**, não de uma paleta de SaaS
 └───────────────────────────┘
 ```
 
-### 5.3 Diaristas & Chamados — `/diaristas`
+### 5.3 Empreiteiros & propostas — `/empreiteiros`
 
 ```
 ┌──────────────────────────────────────────────────────────────────┐
-│ ⚠ ALERTA DE VÍNCULO                                              │
-│ Ronaldo B. (fictício) — 22 diárias seguidas na Creche Jardim     │
-│ Alto, sob o mesmo encarregado, 0 recusas em 24 chamados.         │
-│                                                                  │
-│ Régua desta empresa:  [ 20 ] diárias em [ 30 ] dias   ✎ editar   │
-│ Parâmetro definido pelo jurídico da empresa — o sistema não      │
-│ sugere um número.                                                │
-│                                                                  │
-│ Sugestão de rotatividade → UBS Central · frente hidráulica       │
+│ ⚠ ALERTA DE CONCENTRAÇÃO                                         │
+│ Ronaldo B. (fictício) — 11 empreitas seguidas na Creche Jardim   │
+│ Alto, sem intervalo há 66 dias, todas recebidas por Sr. Aparecido│
+│ 0% de recusa em 26 propostas · nenhuma outra empresa declarada   │
+│ ┌────────────────────────┐ ┌────────────────────────┐            │
+│ │ Empreitas seguidas     │ │ Dias sem intervalo     │            │
+│ │ 11 · régua: 8       ⚠  │ │ 66 · régua: 25      ⚠  │            │
+│ ├────────────────────────┤ ├────────────────────────┤            │
+│ │ % de recusa            │ │ Outras empresas        │            │
+│ │ 0% · régua: mín 10% ⚠  │ │ 0 · régua: mín 1    ⚠  │            │
+│ └────────────────────────┘ └────────────────────────┘            │
+│ Régua: [ 8 ] [ 25 ] [ 10% ] [ 1 ]      valores de exemplo ✎      │
+│ Parâmetros definidos pelo jurídico da empresa — o sistema não    │
+│ sugere números. Acende com DOIS ou mais sinais; um é ruído.      │
 └──────────────────────────────────────────────────────────────────┘
 ┌────────────────────────────────┬─────────────────────────────────┐
-│ PRESTADORES              [busca]│ CHAMADO ABERTO                 │
-│ ┌────────────────────────────┐ │ 4 pedreiros · Creche · seg-qua  │
+│ PARCEIROS DE EMPREITA    [busca]│ PROPOSTA DE EMPREITA           │
+│ ┌────────────────────────────┐ │ Reboco externo — fachada leste  │
+│ │                            │ │ valor global R$ 3.800 · 6 dias  │
 │ │ Ronaldo B.   pedreiro  MEI │ │ ┌────────────────────────────┐  │
-│ │ 22 diárias  ⚠  ASO 12/26   │ │ │ ✓ Aceitou   14:02  Marcos  │  │
-│ ├────────────────────────────┤ │ │ ✓ Aceitou   14:09  Elias   │  │
-│ │ Marcos T.  armador  autôn. │ │ │ ✗ Recusou   14:11  Damião  │  │
-│ │  6 diárias · 9 recusas     │ │ │   "estou em outra obra"    │  │
-│ └────────────────────────────┘ │ │ ○ Sem resposta     Jonas   │  │
+│ │ 11 empreitas ⚠ 0% recusa   │ │ │ ✓ Aceitou   13:58  Ronaldo │  │
+│ ├────────────────────────────┤ │ │ ✓ Aceitou   14:02  Adenilso│  │
+│ │ Marcos T.  armador   ME    │ │ │ ✗ Recusou   14:11  Marcos  │  │
+│ │  6 empreitas · 52% recusa  │ │ │   "estou em outra empreita"│  │
+│ └────────────────────────────┘ │ │ ○ Sem resposta     Gilmar  │  │
 │                                │ └────────────────────────────┘  │
 │                                │ recusa registrada = prova de    │
 │                                │ autonomia                       │
 └────────────────────────────────┴─────────────────────────────────┘
 ┌──────────────────────────────────────────────────────────────────┐
-│ DOSSIÊ POR OBRA                            [ Gerar dossiê (PDF) ] │
-│ contratos · recibos e NF · chamados · recusas · ASO · EPI         │
+│ DOSSIÊ DE REGULARIDADE                     [ Gerar dossiê (PDF) ] │
+│ contratos de empreita · aceites · quitações · propostas ·         │
+│ recusas · notas e recibos · ASO e NR · EPI assinado               │
 │ "o sistema mostra pro senhor antes de mostrar pro juiz"           │
 └──────────────────────────────────────────────────────────────────┘
 ```
@@ -247,7 +254,7 @@ E as duas cores extras vêm **do próprio canteiro**, não de uma paleta de SaaS
 ├──────────────────────────────────────────────────────────────────┤
 │ ⚠ Certidão de FGTS vence em 6 dias e trava 2 medições  há 11min  │
 │ ⚠ Concreto 31% acima do previsto na Creche             há 26min  │
-│ ⚠ Ronaldo B.: 22 diárias seguidas                      há 26min  │
+│ ⚠ Ronaldo B.: 4 de 4 sinais de concentração            há 26min  │
 │ ⚠ Efetivo abaixo do cronograma 3 dias seguidos · UBS   há 1h     │
 │ ▸ Vila Aurora paga em média 90 dias — previsão de caixa há 2h    │
 └──────────────────────────────────────────────────────────────────┘
@@ -270,10 +277,11 @@ E as duas cores extras vêm **do próprio canteiro**, não de uma paleta de SaaS
 
 ## 7. VOCABULÁRIO — a lista fechada
 
-**Usar:** obra · frente · encarregado · efetivo · medição · boletim · diária · prestador · aditivo · glosa · fiscal da prefeitura · certidão · ASO · empreitada · canteiro.
+**Usar:** obra · frente · encarregado · efetivo · medição · boletim · **empreita** · **valor global** · **proposta** · **empreiteiro** · **parceiro de empreita** · aceite · quitação · aditivo · glosa · fiscal da prefeitura · certidão · ASO · canteiro.
+⛔ **Retirado na v2 por orientação do jurídico:** as quatro palavras do vocabulário antigo. A lista exata do que saiu e do que entrou no lugar está em `docs/MIGRACAO.md` §0, único arquivo autorizado a repeti-las.
 ⛔ **Nunca:** tenant · módulo · registro · entidade · dashboard · workflow · card · deploy · schema · usuário (é "você" ou o nome) · item (é "serviço").
 
-**Verbos dos botões, sempre diretos:** *Registrar no diário · Chamar prestador · Fechar medição · Lançar glosa · Gerar dossiê · Cancelar com motivo.*
+**Verbos dos botões, sempre diretos:** *Registrar no diário · Abrir proposta · Aceitar entrega · Fechar medição · Lançar glosa · Gerar dossiê · Cancelar com motivo.*
 ⛔ Nunca *Salvar*, *Enviar*, *Submeter*, *OK*.
 
 ---
@@ -293,5 +301,85 @@ E as duas cores extras vêm **do próprio canteiro**, não de uma paleta de SaaS
 ## 9. O QUE A VITRINE NÃO DESENHA
 
 Login · configurações · perfil · notificações por e-mail · exportação real de PDF · upload real de foto · transcrição real de voz. Onde o produto real integraria, a vitrine mostra o **cartão honesto** (borda tracejada, sem botão): *"integra com o seu sistema fiscal"*. ⛔ **Nenhum botão morto.**
+
+---
+
+# ADENDO v2 — IMAGEM, CORPO E VOCABULÁRIO
+## 22/08/2026 · o que mudou depois da primeira mesa
+
+O dono viu a v1 e disse: *"está fraca visualmente e com pouco corpo — parece app comprado."* Tinha razão. Um painel escuro com quatro listas não convence quem constrói prédios. Este adendo é a resposta em três frentes, e a ordem importa.
+
+---
+
+## 9. O VOCABULÁRIO MUDOU — e não é cosmético
+
+O jurídico da empresa orientou por escrito que se fale em **contrato de empreita por valor global** — e que as palavras do vocabulário antigo saiam do produto. O registro literal da orientação está em `docs/MIGRACAO.md` §0.
+
+Empreitada é contrato de **resultado** (Código Civil, arts. 610–626): entrega-se uma obra ou parte dela por um valor combinado, com autonomia de meios. **Não se paga tempo; paga-se entrega.** Isso muda o nome do módulo, das telas, dos campos, do seed e do roteiro — e muda o desenho:
+
+| v1 (proibido) | v2 |
+|---|---|
+| Contagem de dias trabalhados | **"11 empreitas seguidas, sem intervalo há 66 dias"** |
+| Régua de 2 números | ⭐ **Régua de 4 sinais** — empreitas seguidas · dias sem intervalo · % de recusa · outras empresas |
+| Alerta com 1 sinal | ⭐ **Acende com DOIS ou mais.** Um sinal isolado é ruído: quem fez sete empreitas seguidas numa obra grande e recusou metade das propostas está exercendo autonomia, não a perdendo |
+| Convite por pessoa e por dia ("4 pedreiros, seg a qua") | **Proposta de empreita**: objeto, valor global, prazo |
+
+⚖️ **A régua continua sem valor de fábrica**, e agora aparece em dois lugares: no alerta e em Configurações, sempre com a mesma nota — *parâmetros definidos pelo jurídico da empresa; o sistema não sugere números*.
+
+---
+
+## 10. ⭐ A IMAGEM COMO CHÃO, NUNCA COMO ASSINATURA
+
+**A assinatura continua sendo a régua de quatro marcas.** A imagem é o **chão** — ela dá peso e lugar, e some atrás do dado. A regra, sem exceção:
+
+> **A imagem serve a DADO, não decora.**
+> O banner da capa carrega o número do dinheiro preso. A capa da obra carrega o físico, o financeiro e a régua. A cena abre o diário. Sem número por cima, é foto de agência — e aí ela não entra.
+
+**Tratamento único, em `src/components/imagem.tsx`:**
+- véu de obsidian em **gradiente vertical**, mais fechado embaixo, onde mora o texto;
+- **saturação 0,72 e contraste 1,04** — a foto recua, o ouro do dado avança;
+- ⛔ **o ouro fica só nos dados.** Nunca uma foto crua e colorida brigando com o número;
+- ⛔ **nenhuma chamada de API em tempo de execução.** As peças são geradas uma vez e commitadas (`docs/IMAGENS.md`);
+- sem peça no manifesto, entra o **gradiente de reserva**. A tela funciona igual e ninguém vê imagem quebrada.
+
+**O sistema de capas.** Cada obra do seed tem a sua (`CAPA_DA_OBRA` em `src/lib/imagens.ts`), e ela reaparece igual no Painel, em Obras, na Obra e em Contratos — a mesma obra tem sempre a mesma cara, e é assim que a mesa se localiza sem ler.
+
+**Tipografia sobre foto.** Oswald aguenta: caixa alta, peso 500, sobre o trecho mais fechado do véu. ⛔ Nada de sombra de texto — se precisa de sombra, o véu está fraco.
+
+**Duas leis de moldura, que nasceram de defeito medido:**
+- ⭐ **Altura é piso, não teto** (`min-h`, nunca `h`). Com altura fixa, o telefone cortava o nome da empresa no meio da palavra: a foto estava mandando no dado. Se o dado cresce, a moldura cresce.
+- ⭐ **A peça do topo mede em `vw`, não em `vh`.** Altura em `vh` muda quando a barra do navegador do telefone recolhe — e a página inteira abaixo dela escorrega junto. Foi essa troca que zerou o CLS da capa.
+
+**Gera-se grande, guarda-se do tamanho da tela.** O modelo desenha melhor em 1344 px; a tira de cenas mostra a foto em 240 px. Guardar o grande ali é banda gasta **antes da primeira pintura**, com a foto do topo esperando na fila. O lote caiu de **1,2 MB para 540 kB** sem perder um pixel visível (`docs/IMAGENS.md` §3.1).
+
+**Desempenho medido, não prometido:** Lighthouse mobile, 12 rotas medidas — **acessibilidade 100 e boas práticas 100 em todas**, performance com mediana **95** (a mais pesada, a medição de uma obra, mediana **92**), **CLS 0** em 11 das 12. As peças são servidas como saíram do gerador: deixar o otimizador do framework refazer WebP que já veio pronto custava o LCP inteiro e não devolvia um byte.
+
+---
+
+## 11. A CRÍTICA DE NOVO — os defaults que a imagem traz junto
+
+Imagem é justamente onde o template de agência entra. Nomeando para recusar:
+
+| # | O default | O que fizemos |
+|---|---|---|
+| **7** | **Hero com foto + gradiente roxo + três cartões iguais** | ⛔ zero roxo. O hero carrega **três números reais**, não três ícones, e o gradiente é obsidian sobre a própria foto |
+| **8** | **Foto de banco de imagem com gente sorrindo para a câmera** | ⛔ **nenhum rosto identificável.** Trabalhadores de costas, de longe, ou só as mãos. É documentário, não catálogo |
+| **9** | **Textura decorativa atrás de tudo** | as três texturas existem e ficam **reservadas** — entram só se um cartão precisar de peso, nunca como papel de parede |
+| **10** | **Mapa interativo com pin colorido** | ⛔ **não há mapa.** Um mapa que não navega é enfeite; a localização mora no nome do órgão e na tira da região, declarada ilustrativa |
+| **11** | **Logo grande da marca no topo de tudo** | a marca gerada vira **favicon** e nada mais. No cabeçalho, "CANTEIRO OS" é **texto vivo** em Oswald: mais nítido, escala, e não pesa |
+| **12** | **Foto sem legenda fingindo ser real** | toda peça evocativa carrega **"ilustrativa"** à vista, e Configurações mostra a procedência de cada arquivo |
+
+---
+
+## 12. O CORPO — de 5 telas a 21 rotas, sem sala vazia
+
+O menu passou a ser **por setor**, do jeito que uma empreiteira divide o próprio trabalho: Direção · Obras · Pessoas · Suprimentos · Financeiro · Documentos · Inteligência. As duas pernas continuam: menu **e** busca global (obra, contrato, empreiteiro, fornecedor, documento, medição).
+
+**Regra do corpo:** nenhuma sala nasce vazia, e o dado de cada uma tem de fechar com o das outras. O custo real de uma obra não pode passar do contrato dela — se passar, a primeira tela desmente a segunda, e a mesa percebe antes de você.
+
+| Faixa | Navegação |
+|---|---|
+| ≤ 640px | barra inferior com 5 destinos + **Setores** (folha com o menu inteiro), alvos de 48–60px |
+| ≥ 1025px | coluna lateral com os 7 setores abertos + busca |
 
 *Universo Bonaparte · ALSHAM Global Commerce Ltda · Powered by ALSHAM*

@@ -13,8 +13,10 @@ import { GraficoDeCaixa } from '@/components/grafico';
 import { Regua } from '@/components/regua';
 import { Cartao, Etiqueta, Rotulo, TituloSecao, Vazio } from '@/components/ui';
 import { Seta } from '@/components/icones';
+import { Foto, TiraDeCenas } from '@/components/imagem';
+import { CAPA_DA_OBRA, CENAS } from '@/lib/imagens';
 import { FRENTES, TIPOS_DE_OBRA, nomeDe } from '@/data/taxonomias';
-import { data, dias, dinheiro, numero, pct } from '@/lib/formato';
+import { data, dias, dinheiro, haDias, numero, pct } from '@/lib/formato';
 
 export default function Obra() {
   const { id } = useParams<{ id: string }>();
@@ -22,7 +24,12 @@ export default function Obra() {
   const obra = mundo.obras.find((o) => o.id === id);
 
   if (!obra) {
-    return <Vazio titulo="Obra não encontrada." dica="Volte ao painel e escolha uma das obras da carteira." />;
+    return (
+      <Vazio
+        titulo="Obra não encontrada."
+        dica="Volte ao painel e escolha uma das obras da carteira."
+      />
+    );
   }
 
   const pref = mundo.prefeituras.find((p) => p.id === obra.prefeituraId)!;
@@ -38,46 +45,66 @@ export default function Obra() {
   );
   const desvios = desviosDeInsumo(mundo).filter((d) => d.obraId === obra.id);
   const falha = falhasDeDiario(mundo).find((f) => f.obraId === obra.id)!;
-  const doDiario = mundo.diario.filter((e) => e.obraId === obra.id && e.cancelada === null).slice(0, 5);
+  const doDiario = mundo.diario
+    .filter((e) => e.obraId === obra.id && e.cancelada === null)
+    .slice(0, 5);
 
   return (
     <div className="mx-auto max-w-5xl space-y-8">
-      <Cartao className="p-5">
-        <div className="flex flex-wrap items-start justify-between gap-4">
+      <Cartao className="overflow-hidden">
+        <Foto nome={CAPA_DA_OBRA[obra.id] ?? ''} altura="capa" prioridade>
           <div>
-            <h1 className="placa text-[20px] leading-tight text-chalk">{obra.nome}</h1>
-            <p className="mt-1 text-[13px] text-concrete">
-              {pref.nome} · {nomeDe(TIPOS_DE_OBRA, obra.tipoId)} · encarregado {obra.encarregado}
-            </p>
-            <p className="text-[13px] text-concrete-dim">
-              início em {data(obra.inicio)} · prazo de {obra.prazoMeses} meses
-            </p>
+            <div className="placa text-[10px] text-gold">{nomeDe(TIPOS_DE_OBRA, obra.tipoId)}</div>
+            <h1 className="placa text-[22px] leading-tight text-chalk sm:text-[28px]">
+              {obra.nome}
+            </h1>
+            <p className="text-[13px] text-concrete">{pref.nome}</p>
           </div>
-          <div className="text-right">
-            <Rotulo>Contrato</Rotulo>
-            <p className="num text-[22px] text-chalk">{dinheiro(obra.contratoCents)}</p>
+        </Foto>
+        <div className="p-5">
+          <div className="flex flex-wrap items-start justify-between gap-4">
+            <div>
+              <h2 className="placa text-[15px] leading-tight text-chalk">Contrato e prazo</h2>
+              <p className="mt-1 text-[13px] text-concrete">
+                {pref.nome} · {nomeDe(TIPOS_DE_OBRA, obra.tipoId)} · encarregado {obra.encarregado}
+              </p>
+              <p className="text-[13px] text-concrete-dim">
+                início em {data(obra.inicio)} · prazo de {obra.prazoMeses} meses
+              </p>
+            </div>
+            <div className="text-right">
+              <Rotulo>Contrato</Rotulo>
+              <p className="num text-[22px] text-chalk">{dinheiro(obra.contratoCents)}</p>
+            </div>
           </div>
-        </div>
 
-        <div className="mt-5">
-          <Regua valores={soma} base={obra.contratoCents} />
-        </div>
+          <div className="mt-5">
+            <Regua valores={soma} base={obra.contratoCents} />
+          </div>
 
-        <div className="mt-5 flex flex-wrap gap-3">
-          <Link
-            href={`/medicoes/${obra.id}`}
-            className="placa inline-flex min-h-[44px] items-center gap-2 border border-line bg-surface-2 px-4 text-[12px] text-chalk hover:border-line-strong"
-          >
-            Ver medições <Seta className="h-4 w-4" />
-          </Link>
-          <Link
-            href="/diario"
-            className="placa inline-flex min-h-[44px] items-center gap-2 border border-line bg-surface-2 px-4 text-[12px] text-chalk hover:border-line-strong"
-          >
-            Diário de obra <Seta className="h-4 w-4" />
-          </Link>
+          <div className="mt-5 flex flex-wrap gap-3">
+            <Link
+              href={`/medicoes/${obra.id}`}
+              className="placa inline-flex min-h-[44px] items-center gap-2 border border-line bg-surface-2 px-4 text-[12px] text-chalk hover:border-line-strong"
+            >
+              Ver medições <Seta className="h-4 w-4" />
+            </Link>
+            <Link
+              href="/diario"
+              className="placa inline-flex min-h-[44px] items-center gap-2 border border-line bg-surface-2 px-4 text-[12px] text-chalk hover:border-line-strong"
+            >
+              Diário de obra <Seta className="h-4 w-4" />
+            </Link>
+          </div>
         </div>
       </Cartao>
+
+      <section>
+        <TituloSecao acao={<Etiqueta tom="neutro">imagens ilustrativas</Etiqueta>}>
+          O canteiro
+        </TituloSecao>
+        <TiraDeCenas nomes={CENAS} />
+      </section>
 
       <section className="grid gap-6 lg:grid-cols-2">
         <Cartao className="p-5">
@@ -102,13 +129,12 @@ export default function Obra() {
           <p className="mt-4 border-t border-line pt-3 text-[13px] leading-snug text-concrete">
             {falha.diasSemDiario >= 3 ? (
               <>
-                Sem diário há{' '}
-                <span className="text-rust-bright">{dias(falha.diasSemDiario)}</span> — sem ele, a
-                medição do mês fica sem prova de execução.
+                Sem diário há <span className="text-rust-bright">{dias(falha.diasSemDiario)}</span>{' '}
+                — sem ele, a medição do mês fica sem prova de execução.
               </>
             ) : (
               <>
-                Último registro no diário {dias(falha.diasSemDiario)} atrás.
+                Último registro no diário {haDias(falha.diasSemDiario)}.
                 {falha.diasSeguidosComEfetivoBaixo >= 2
                   ? ` Efetivo abaixo do previsto nos ${falha.diasSeguidosComEfetivoBaixo} registros mais recentes.`
                   : ''}
@@ -134,7 +160,11 @@ export default function Obra() {
                   </p>
                   <p
                     className={`num mt-1 text-[15px] ${
-                      d.desvioPct >= 15 ? 'text-rust-bright' : d.desvioPct <= -10 ? 'text-olive-bright' : 'text-concrete'
+                      d.desvioPct >= 15
+                        ? 'text-rust-bright'
+                        : d.desvioPct <= -10
+                          ? 'text-olive-bright'
+                          : 'text-concrete'
                     }`}
                   >
                     {d.desvioPct > 0 ? '+' : ''}
@@ -155,11 +185,20 @@ export default function Obra() {
       </section>
 
       <section>
-        <TituloSecao acao={<Link href="/diario" className="placa text-[11px] text-gold hover:text-gold-bright">ver o diário</Link>}>
+        <TituloSecao
+          acao={
+            <Link href="/diario" className="placa text-[11px] text-gold hover:text-gold-bright">
+              ver o diário
+            </Link>
+          }
+        >
           Últimos registros do diário
         </TituloSecao>
         {doDiario.length === 0 ? (
-          <Vazio titulo="Nenhum registro nesta obra." dica="O encarregado registra pelo celular, em vinte segundos." />
+          <Vazio
+            titulo="Nenhum registro nesta obra."
+            dica="O encarregado registra pelo celular, em vinte segundos."
+          />
         ) : (
           <Cartao className="divide-y divide-line">
             {doDiario.map((e) => (

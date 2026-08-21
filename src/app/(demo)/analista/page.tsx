@@ -37,7 +37,7 @@ export default function Analista() {
           <div>
             <h1 className="placa text-[16px] text-chalk">Funcionário digital</h1>
             <p className="mt-1.5 max-w-xl text-[14px] leading-snug text-concrete">
-              Ninguém perguntou nada. Ele olhou as obras, as medições, o diário e os prestadores, e
+              Ninguém perguntou nada. Ele olhou as obras, as medições, o diário e os empreiteiros, e
               trouxe o que mudou.{' '}
               <span className="text-chalk">Cada linha abre a conta que a produziu</span> — não há
               frase bonita sem número por trás.
@@ -51,7 +51,7 @@ export default function Analista() {
         {lista.length === 0 ? (
           <Vazio
             titulo="Nada a apontar neste momento."
-            dica="Quando uma medição passar do prazo, um documento se aproximar do vencimento ou um prestador concentrar diárias, o aviso aparece aqui."
+            dica="Quando uma medição passar do prazo, um documento se aproximar do vencimento ou um empreiteiro concentrar empreitas seguidas, o aviso aparece aqui."
           />
         ) : (
           <div className="space-y-2">
@@ -63,9 +63,15 @@ export default function Analista() {
                     <div className="min-w-0 flex-1">
                       <div className="flex flex-wrap items-center gap-2">
                         <Etiqueta tom={a.tom}>
-                          {a.tom === 'rust' ? 'exige decisão' : a.tom === 'gold' ? 'atenção' : 'leitura'}
+                          {a.tom === 'rust'
+                            ? 'exige decisão'
+                            : a.tom === 'gold'
+                              ? 'atenção'
+                              : 'leitura'}
                         </Etiqueta>
-                        <span className="text-[12px] text-concrete-dim">{haMinutos(a.notadoHaMin)}</span>
+                        <span className="text-[12px] text-concrete-dim">
+                          {haMinutos(a.notadoHaMin)}
+                        </span>
                       </div>
                       <p className="mt-1.5 text-[17px] leading-snug text-chalk">{a.titulo}</p>
                       <p className="text-[13px] text-concrete">{a.detalhe}</p>
@@ -116,7 +122,10 @@ export default function Analista() {
         ) : (
           <Cartao className="divide-y divide-line">
             {ritmos.map((r) => (
-              <div key={r.prefeituraId} className="flex flex-wrap items-baseline justify-between gap-3 px-4 py-3">
+              <div
+                key={r.prefeituraId}
+                className="flex flex-wrap items-baseline justify-between gap-3 px-4 py-3"
+              >
                 <span className="text-[15px] text-chalk">{r.nome}</span>
                 <span className="flex items-baseline gap-3">
                   <span className="num text-[20px] text-gold-bright">{dias(r.mediaDias)}</span>
@@ -129,8 +138,8 @@ export default function Analista() {
           </Cartao>
         )}
         <p className="mt-3 text-[13px] leading-snug text-concrete">
-          Cada prefeitura tem o seu ritmo de caixa. Planejar todas do mesmo jeito é o que faz
-          faltar dinheiro no mês errado.
+          Cada prefeitura tem o seu ritmo de caixa. Planejar todas do mesmo jeito é o que faz faltar
+          dinheiro no mês errado.
         </p>
       </section>
     </div>

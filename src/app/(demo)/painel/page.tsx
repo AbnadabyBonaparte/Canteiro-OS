@@ -14,6 +14,8 @@ import { documentosNoPrazo, medicoesPresas, totalPresoCents } from '@/lib/analis
 import { Regua } from '@/components/regua';
 import { Cartao, Etiqueta, TituloSecao, Vazio } from '@/components/ui';
 import { Prumo, Seta } from '@/components/icones';
+import { Foto } from '@/components/imagem';
+import { CAPA_DA_OBRA } from '@/lib/imagens';
 import { data, dias, dinheiro, dinheiroCurto, pct, vencimento } from '@/lib/formato';
 import { TIPOS_DE_DOCUMENTO, nomeDe } from '@/data/taxonomias';
 import { diasAte } from '@/data/seed';
@@ -36,8 +38,8 @@ export default function Painel() {
                 {dinheiroCurto(total)}
               </div>
               <p className="mt-2 max-w-md text-[14px] leading-snug text-concrete">
-                Aceito pelo fiscal e ainda não pago. Não é previsão — é o que já foi conferido
-                e liberado por quem fiscaliza a obra.
+                Aceito pelo fiscal e ainda não pago. Não é previsão — é o que já foi conferido e
+                liberado por quem fiscaliza a obra.
               </p>
             </div>
             {presas.length > 0 ? (
@@ -110,40 +112,44 @@ export default function Painel() {
             const financeiro = (soma.pagoCents / obra.contratoCents) * 100;
 
             return (
-              <Cartao key={obra.id} className="flex flex-col p-5">
-                <Link href={`/obras/${obra.id}`} className="group">
-                  <h3 className="placa text-[15px] leading-tight text-chalk group-hover:text-gold-bright">
-                    {obra.nome}
-                  </h3>
-                  <p className="mt-1 text-[13px] text-concrete">{pref.nome}</p>
+              <Cartao key={obra.id} className="flex flex-col overflow-hidden">
+                <Link href={`/obras/${obra.id}`} className="group block">
+                  <Foto nome={CAPA_DA_OBRA[obra.id] ?? ''} altura="cena">
+                    <div>
+                      <h3 className="placa text-[15px] leading-tight text-chalk group-hover:text-gold-bright">
+                        {obra.nome}
+                      </h3>
+                      <p className="text-[12px] text-concrete">{pref.nome}</p>
+                    </div>
+                  </Foto>
                 </Link>
 
-                <div className="mt-4 flex items-baseline gap-5">
-                  <span>
-                    <span className="placa block text-[10px] text-concrete-dim">Físico</span>
-                    <span className="num text-[20px] text-chalk">{pct(obra.pctFisico)}</span>
-                  </span>
-                  <span>
-                    <span className="placa block text-[10px] text-concrete-dim">Financeiro</span>
-                    <span className="num text-[20px] text-chalk">{pct(financeiro)}</span>
-                  </span>
-                </div>
+                <div className="flex flex-1 flex-col p-5">
+                  <div className="flex items-baseline gap-5">
+                    <span>
+                      <span className="placa block text-[10px] text-concrete-dim">Físico</span>
+                      <span className="num text-[20px] text-chalk">{pct(obra.pctFisico)}</span>
+                    </span>
+                    <span>
+                      <span className="placa block text-[10px] text-concrete-dim">Financeiro</span>
+                      <span className="num text-[20px] text-chalk">{pct(financeiro)}</span>
+                    </span>
+                  </div>
 
-                <div className="mt-4">
-                  <Regua valores={soma} base={obra.contratoCents} denso />
-                </div>
+                  <div className="mt-4">
+                    <Regua valores={soma} base={obra.contratoCents} denso />
+                  </div>
 
-                <div className="mt-4 flex flex-wrap items-center gap-2 border-t border-line pt-3">
-                  {emCurso ? (
-                    <Etiqueta tom="gold">
-                      Medição {emCurso.numero} em curso
-                    </Etiqueta>
-                  ) : (
-                    <Etiqueta tom="olive">Medições em dia</Etiqueta>
-                  )}
-                  {obra.aditivoPct >= 17.5 ? (
-                    <Etiqueta tom="rust">Aditivos em {obra.aditivoPct}%</Etiqueta>
-                  ) : null}
+                  <div className="mt-4 flex flex-wrap items-center gap-2 border-t border-line pt-3">
+                    {emCurso ? (
+                      <Etiqueta tom="gold">Medição {emCurso.numero} em curso</Etiqueta>
+                    ) : (
+                      <Etiqueta tom="olive">Medições em dia</Etiqueta>
+                    )}
+                    {obra.aditivoPct >= 17.5 ? (
+                      <Etiqueta tom="rust">Aditivos em {obra.aditivoPct}%</Etiqueta>
+                    ) : null}
+                  </div>
                 </div>
               </Cartao>
             );
