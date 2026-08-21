@@ -18,7 +18,9 @@
   /* tinta */
   --color-chalk: #e9ecf4;
   --color-concrete: #97a1b7;
-  --color-concrete-dim: #6b7488;
+  /* Clareado na v2: em 11px sobre obsidian, o tom anterior não passava no
+     contraste mínimo. Legibilidade ganha de sutileza. */
+  --color-concrete-dim: #7f8a9e;
 
   /* acento — latão, único acento de marca */
   --color-gold: #c9a24b;
@@ -108,21 +110,28 @@ body {
   transition: width 240ms ease-out;
 }
 
-.regua-executado { background: color-mix(in srgb, var(--color-gold) 22%, transparent); }
-.regua-aceito    { background: color-mix(in srgb, var(--color-gold) 42%, transparent); }
-.regua-faturado  { background: color-mix(in srgb, var(--color-gold) 64%, transparent); }
-.regua-pago      { background: var(--color-gold); }
+.regua-executado {
+  background: color-mix(in srgb, var(--color-gold) 22%, transparent);
+}
+.regua-aceito {
+  background: color-mix(in srgb, var(--color-gold) 42%, transparent);
+}
+.regua-faturado {
+  background: color-mix(in srgb, var(--color-gold) 64%, transparent);
+}
+.regua-pago {
+  background: var(--color-gold);
+}
 
 /* Os ticks de trena: 20 divisões, a cada 5 uma mais alta. */
 .regua-ticks {
   position: absolute;
   inset: 0;
-  background-image:
-    repeating-linear-gradient(
-      to right,
-      color-mix(in srgb, var(--color-obsidian) 55%, transparent) 0 1px,
-      transparent 1px calc(100% / 20)
-    );
+  background-image: repeating-linear-gradient(
+    to right,
+    color-mix(in srgb, var(--color-obsidian) 55%, transparent) 0 1px,
+    transparent 1px calc(100% / 20)
+  );
   background-size: 100% 45%;
   background-repeat: no-repeat;
   background-position: bottom left;

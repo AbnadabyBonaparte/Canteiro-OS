@@ -1,0 +1,178 @@
+[
+  {
+    "arquivo": "banner-capa.webp",
+    "alt": "Canteiro de obra ao amanhecer, com estrutura de concreto, fôrmas e um caminhão-betoneira, serra ao fundo",
+    "ferramenta": "fal",
+    "modelo": "fal-ai/flux/dev",
+    "prompt": "photojournalistic documentary photograph, brazilian central-west construction site, cerrado landscape, natural light, muted desaturated palette, deep shadows, shot on 35mm, shallow depth of field, no text, no logos, no signage lettering, no identifiable faces, workers seen from behind or at distance, authentic and unglamorous. Wide establishing shot of a construction site at dawn, golden hour, raw concrete structure with formwork and rebar cages, a concrete mixer truck, red-earth ground, low serra ridge on the horizon, dust in the air, empty foreground",
+    "largura": 1536,
+    "altura": 640,
+    "bytes": 64350,
+    "geradoEm": "2026-08-21"
+  },
+  {
+    "arquivo": "cena-armacao.webp",
+    "alt": "Malha de ferragem armada para fundação, com trabalhador amarrando o arame",
+    "ferramenta": "fal",
+    "modelo": "fal-ai/flux/dev",
+    "prompt": "photojournalistic documentary photograph, brazilian central-west construction site, cerrado landscape, natural light, muted desaturated palette, deep shadows, shot on 35mm, shallow depth of field, no text, no logos, no signage lettering, no identifiable faces, workers seen from behind or at distance, authentic and unglamorous. Dense grid of tied steel rebar for a foundation, worker crouched tying wire, seen from above at an angle, rust-orange steel against grey ground",
+    "largura": 768,
+    "altura": 440,
+    "bytes": 61104,
+    "geradoEm": "2026-08-21"
+  },
+  {
+    "arquivo": "cena-concretagem.webp",
+    "alt": "Concretagem de laje, com mangote despejando concreto e equipe regularizando",
+    "ferramenta": "fal",
+    "modelo": "fal-ai/flux/dev",
+    "prompt": "photojournalistic documentary photograph, brazilian central-west construction site, cerrado landscape, natural light, muted desaturated palette, deep shadows, shot on 35mm, shallow depth of field, no text, no logos, no signage lettering, no identifiable faces, workers seen from behind or at distance, authentic and unglamorous. Concrete pour on a slab, pump hose spilling wet concrete, two workers with screed and vibrator seen from the side, splash and haze",
+    "largura": 768,
+    "altura": 440,
+    "bytes": 29386,
+    "geradoEm": "2026-08-21"
+  },
+  {
+    "arquivo": "cena-fim-de-tarde.webp",
+    "alt": "Fim de tarde no canteiro, com ferramentas guardadas e sombras longas",
+    "ferramenta": "fal",
+    "modelo": "fal-ai/flux/dev",
+    "prompt": "photojournalistic documentary photograph, brazilian central-west construction site, cerrado landscape, natural light, muted desaturated palette, deep shadows, shot on 35mm, shallow depth of field, no text, no logos, no signage lettering, no identifiable faces, workers seen from behind or at distance, authentic and unglamorous. End of the working day, tools and wheelbarrows lined up and covered, long shadows, empty site, warm low sun, nobody in frame",
+    "largura": 768,
+    "altura": 440,
+    "bytes": 22508,
+    "geradoEm": "2026-08-21"
+  },
+  {
+    "arquivo": "cena-fiscal.webp",
+    "alt": "Visita de fiscal com prancheta ao lado de um trabalhador, ambos vistos de costas",
+    "ferramenta": "fal",
+    "modelo": "fal-ai/flux/dev",
+    "prompt": "photojournalistic documentary photograph, brazilian central-west construction site, cerrado landscape, natural light, muted desaturated palette, deep shadows, shot on 35mm, shallow depth of field, no text, no logos, no signage lettering, no identifiable faces, workers seen from behind or at distance, authentic and unglamorous. A visiting inspector in hard hat and vest holding a clipboard, standing beside a site worker, both seen in three-quarter from behind, pointing at a wall",
+    "largura": 768,
+    "altura": 440,
+    "bytes": 17452,
+    "geradoEm": "2026-08-21"
+  },
+  {
+    "arquivo": "cena-projeto.webp",
+    "alt": "Equipe de capacete e colete lendo um projeto sobre uma prancha, vista de costas",
+    "ferramenta": "fal",
+    "modelo": "fal-ai/flux/dev",
+    "prompt": "photojournalistic documentary photograph, brazilian central-west construction site, cerrado landscape, natural light, muted desaturated palette, deep shadows, shot on 35mm, shallow depth of field, no text, no logos, no signage lettering, no identifiable faces, workers seen from behind or at distance, authentic and unglamorous. Three construction workers in hard hats and reflective vests seen from behind, gathered over a paper drawing spread on a plank, pointing, diverse build and skin tones",
+    "largura": 768,
+    "altura": 440,
+    "bytes": 19070,
+    "geradoEm": "2026-08-21"
+  },
+  {
+    "arquivo": "cena-trena.webp",
+    "alt": "Mãos de encarregado medindo uma parede de bloco com trena de aço",
+    "ferramenta": "fal",
+    "modelo": "fal-ai/flux/dev",
+    "prompt": "photojournalistic documentary photograph, brazilian central-west construction site, cerrado landscape, natural light, muted desaturated palette, deep shadows, shot on 35mm, shallow depth of field, no text, no logos, no signage lettering, no identifiable faces, workers seen from behind or at distance, authentic and unglamorous. Hands of a site foreman holding a steel tape measure against a block wall, close on the hands and the tape, face out of frame, dusty work gloves",
+    "largura": 768,
+    "altura": 440,
+    "bytes": 19136,
+    "geradoEm": "2026-08-21"
+  },
+  {
+    "arquivo": "marca-canteiro.webp",
+    "alt": "Marca do produto Canteiro OS",
+    "ferramenta": "ideogram",
+    "modelo": "ideogram-v3 (QUALITY)",
+    "prompt": "A wordmark logo reading exactly \"CANTEIRO OS\" in condensed industrial stencil sans-serif, all uppercase, tight letter spacing, warm brass gold letters on a solid very dark navy background, flat vector, centered, generous margin, construction site signage feel, no illustration, no icon, no extra words",
+    "largura": 1024,
+    "altura": 1024,
+    "bytes": 19498,
+    "geradoEm": "2026-08-21"
+  },
+  {
+    "arquivo": "obra-creche.webp",
+    "alt": "Prédio térreo de creche em construção, com alvenaria de bloco cerâmico e telhado em andamento",
+    "ferramenta": "fal",
+    "modelo": "fal-ai/flux/dev",
+    "prompt": "photojournalistic documentary photograph, brazilian central-west construction site, cerrado landscape, natural light, muted desaturated palette, deep shadows, shot on 35mm, shallow depth of field, no text, no logos, no signage lettering, no identifiable faces, workers seen from behind or at distance, authentic and unglamorous. Single-storey public daycare building under construction, ceramic block masonry walls, roof structure half finished, scaffolding, stacked blocks and sand piles, midday light",
+    "largura": 1344,
+    "altura": 460,
+    "bytes": 65130,
+    "geradoEm": "2026-08-21"
+  },
+  {
+    "arquivo": "obra-pavimentacao.webp",
+    "alt": "Rua em pavimentação asfáltica, com rolo compactador sobre asfalto novo e meio-fio de concreto",
+    "ferramenta": "fal",
+    "modelo": "fal-ai/flux/dev",
+    "prompt": "photojournalistic documentary photograph, brazilian central-west construction site, cerrado landscape, natural light, muted desaturated palette, deep shadows, shot on 35mm, shallow depth of field, no text, no logos, no signage lettering, no identifiable faces, workers seen from behind or at distance, authentic and unglamorous. Road paving works on a residential street, steel drum roller compacting fresh hot asphalt, freshly cast concrete curb along the side, steam rising, workers at distance",
+    "largura": 1344,
+    "altura": 460,
+    "bytes": 51816,
+    "geradoEm": "2026-08-21"
+  },
+  {
+    "arquivo": "obra-ubs.webp",
+    "alt": "Reforma de unidade básica de saúde, com andaime metálico encostado na fachada",
+    "ferramenta": "fal",
+    "modelo": "fal-ai/flux/dev",
+    "prompt": "photojournalistic documentary photograph, brazilian central-west construction site, cerrado landscape, natural light, muted desaturated palette, deep shadows, shot on 35mm, shallow depth of field, no text, no logos, no signage lettering, no identifiable faces, workers seen from behind or at distance, authentic and unglamorous. Renovation of a small public health clinic, metal scaffolding against a plastered facade, protective plastic sheeting over windows, buckets and tools on the ground",
+    "largura": 1344,
+    "altura": 460,
+    "bytes": 49142,
+    "geradoEm": "2026-08-21"
+  },
+  {
+    "arquivo": "regiao-cidade.webp",
+    "alt": "Cidade pequena do interior vista de cima ao anoitecer, com a serra atrás — imagem ilustrativa",
+    "ferramenta": "fal",
+    "modelo": "fal-ai/flux/dev",
+    "prompt": "photojournalistic documentary photograph, brazilian central-west construction site, cerrado landscape, natural light, muted desaturated palette, deep shadows, shot on 35mm, shallow depth of field, no text, no logos, no signage lettering, no identifiable faces, workers seen from behind or at distance, authentic and unglamorous. Small brazilian interior town seen from a hill at dusk, low rooftops, a water tower, a serra silhouette behind, warm scattered lights, no signage",
+    "largura": 768,
+    "altura": 440,
+    "bytes": 10560,
+    "geradoEm": "2026-08-21"
+  },
+  {
+    "arquivo": "regiao-rio.webp",
+    "alt": "Rio largo com barrancos de argila e mata na outra margem — imagem ilustrativa",
+    "ferramenta": "fal",
+    "modelo": "fal-ai/flux/dev",
+    "prompt": "photojournalistic documentary photograph, brazilian central-west construction site, cerrado landscape, natural light, muted desaturated palette, deep shadows, shot on 35mm, shallow depth of field, no text, no logos, no signage lettering, no identifiable faces, workers seen from behind or at distance, authentic and unglamorous. Wide slow river with sandy banks and eroded clay bluffs, gallery forest on the far margin, overcast soft light, no boats, no people",
+    "largura": 768,
+    "altura": 440,
+    "bytes": 26436,
+    "geradoEm": "2026-08-21"
+  },
+  {
+    "arquivo": "regiao-serra.webp",
+    "alt": "Serra de rocha avermelhada ao entardecer sobre vegetação de cerrado — imagem ilustrativa",
+    "ferramenta": "fal",
+    "modelo": "fal-ai/flux/dev",
+    "prompt": "photojournalistic documentary photograph, brazilian central-west construction site, cerrado landscape, natural light, muted desaturated palette, deep shadows, shot on 35mm, shallow depth of field, no text, no logos, no signage lettering, no identifiable faces, workers seen from behind or at distance, authentic and unglamorous. Red rocky ridge at late afternoon, dry cerrado vegetation, warm raking light, wide open sky, no buildings",
+    "largura": 768,
+    "altura": 440,
+    "bytes": 24224,
+    "geradoEm": "2026-08-21"
+  },
+  {
+    "arquivo": "textura-concreto.webp",
+    "alt": "Textura de concreto bruto, usada como fundo do cartão de integração",
+    "ferramenta": "fal",
+    "modelo": "fal-ai/flux/dev",
+    "prompt": "flat overhead macro photograph of raw grey concrete surface, fine aggregate, subtle form-tie marks, even diffuse light, seamless, no text, no objects",
+    "largura": 1024,
+    "altura": 1024,
+    "bytes": 62694,
+    "geradoEm": "2026-08-21"
+  },
+  {
+    "arquivo": "textura-projeto.webp",
+    "alt": "Textura de papel de projeto, usada como fundo do estado vazio",
+    "ferramenta": "fal",
+    "modelo": "fal-ai/flux/dev",
+    "prompt": "flat overhead macro photograph of an old blank technical drawing paper, faint fold creases and fibre grain, warm off-white, even light, no text, no lines",
+    "largura": 1024,
+    "altura": 1024,
+    "bytes": 10630,
+    "geradoEm": "2026-08-21"
+  }
+]

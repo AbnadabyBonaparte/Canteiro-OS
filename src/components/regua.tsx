@@ -46,8 +46,11 @@ export function Regua({
 
   return (
     <div>
-      <div className={`regua ${compacta ? 'h-3' : ''}`} role="img"
-        aria-label={`Executado ${dinheiro(valores.executadoCents)}, aceito ${dinheiro(valores.aceitoCents)}, faturado ${dinheiro(valores.faturadoCents)}, pago ${dinheiro(valores.pagoCents)}`}>
+      <div
+        className={`regua ${compacta ? 'h-3' : ''}`}
+        role="img"
+        aria-label={`Executado ${dinheiro(valores.executadoCents)}, aceito ${dinheiro(valores.aceitoCents)}, faturado ${dinheiro(valores.faturadoCents)}, pago ${dinheiro(valores.pagoCents)}`}
+      >
         {MARCAS.map((m) => (
           <div
             key={m.chave}
@@ -65,7 +68,9 @@ export function Regua({
         {compacta ? null : <div className="regua-ticks" />}
       </div>
 
-      <dl className={`mt-2 grid gap-x-4 gap-y-1.5 ${denso ? 'grid-cols-2' : 'grid-cols-2 sm:grid-cols-4'}`}>
+      <dl
+        className={`mt-2 grid gap-x-4 gap-y-1.5 ${denso ? 'grid-cols-2' : 'grid-cols-2 sm:grid-cols-4'}`}
+      >
         {MARCAS.map((m) => (
           <div key={m.chave}>
             <dt className="placa text-[10px] text-concrete-dim">{m.rotulo}</dt>

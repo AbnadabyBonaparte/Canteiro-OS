@@ -41,11 +41,76 @@ export const ESPECIALIDADES: readonly ItemTaxonomia[] = [
   { id: 'operador', nome: 'Operador de máquina', ordem: 8 },
 ];
 
+/**
+ * ⚖️ A FORMA DE CONTRATAR O EMPREITEIRO.
+ *
+ * Empreitada é contrato de RESULTADO (Código Civil, arts. 610–626): entrega-se
+ * uma obra ou parte dela por um valor global combinado, com autonomia de meios.
+ * Quem entrega pode ser pessoa física ou jurídica — e é isso que esta lista
+ * nomeia. ⛔ Não confundir com vínculo de emprego: a equipe CLT da empresa vive
+ * em `/equipe`, não aqui.
+ */
 export const MODALIDADES: readonly ItemTaxonomia[] = [
   { id: 'mei', nome: 'MEI', ordem: 1 },
-  { id: 'autonomo', nome: 'Autônomo', ordem: 2 },
-  { id: 'intermitente', nome: 'Intermitente', ordem: 3 },
-  { id: 'clt', nome: 'CLT', ordem: 4 },
+  { id: 'me-epp', nome: 'Empresa (ME/EPP)', ordem: 2 },
+  { id: 'pf', nome: 'Pessoa física', ordem: 3 },
+  { id: 'cooperado', nome: 'Cooperado', ordem: 4 },
+];
+
+/** O que a empreita entrega. Vocabulário de cada casa — nunca enum. */
+export const OBJETOS_DE_EMPREITA: readonly ItemTaxonomia[] = [
+  { id: 'alvenaria', nome: 'Alvenaria de vedação', ordem: 1 },
+  { id: 'reboco', nome: 'Reboco e emboço', ordem: 2 },
+  { id: 'contrapiso', nome: 'Contrapiso', ordem: 3 },
+  { id: 'ceramica', nome: 'Assentamento de cerâmica', ordem: 4 },
+  { id: 'forma-armacao', nome: 'Fôrma e armação', ordem: 5 },
+  { id: 'cobertura', nome: 'Estrutura de cobertura', ordem: 6 },
+  { id: 'eletrica', nome: 'Instalação elétrica', ordem: 7 },
+  { id: 'hidraulica', nome: 'Instalação hidráulica', ordem: 8 },
+  { id: 'pintura', nome: 'Pintura', ordem: 9 },
+  { id: 'meio-fio', nome: 'Meio-fio e sarjeta', ordem: 10 },
+  { id: 'sinalizacao', nome: 'Sinalização viária', ordem: 11 },
+  { id: 'demolicao', nome: 'Demolição e remoção', ordem: 12 },
+];
+
+/** Como o contrato com o órgão público muda de tamanho ou de prazo. */
+export const TIPOS_DE_ADITIVO: readonly ItemTaxonomia[] = [
+  { id: 'valor-acrescimo', nome: 'Acréscimo de valor', ordem: 1 },
+  { id: 'valor-supressao', nome: 'Supressão de valor', ordem: 2 },
+  { id: 'prazo', nome: 'Prorrogação de prazo', ordem: 3 },
+  { id: 'reequilibrio', nome: 'Reequilíbrio econômico-financeiro', ordem: 4 },
+  { id: 'reajuste', nome: 'Reajuste contratual', ordem: 5 },
+];
+
+/** O que chega e o que sai na relação com o órgão. */
+export const TIPOS_DE_OFICIO: readonly ItemTaxonomia[] = [
+  { id: 'exigencia', nome: 'Exigência técnica', ordem: 1 },
+  { id: 'notificacao', nome: 'Notificação', ordem: 2 },
+  { id: 'solicitacao', nome: 'Solicitação de documento', ordem: 3 },
+  { id: 'resposta', nome: 'Resposta da empresa', ordem: 4 },
+  { id: 'comunicado', nome: 'Comunicado', ordem: 5 },
+];
+
+/** Os setores do sistema — é assim que a empresa divide o próprio trabalho. */
+export const SETORES: readonly ItemTaxonomia[] = [
+  { id: 'direcao', nome: 'Direção', ordem: 1 },
+  { id: 'obras', nome: 'Obras', ordem: 2 },
+  { id: 'pessoas', nome: 'Pessoas', ordem: 3 },
+  { id: 'suprimentos', nome: 'Suprimentos', ordem: 4 },
+  { id: 'financeiro', nome: 'Financeiro', ordem: 5 },
+  { id: 'documentos', nome: 'Documentos', ordem: 6 },
+];
+
+/** Famílias de material — a curva ABC se apoia nelas. */
+export const FAMILIAS_DE_MATERIAL: readonly ItemTaxonomia[] = [
+  { id: 'concreto', nome: 'Concreto e cimento', ordem: 1 },
+  { id: 'aco', nome: 'Aço e ferragem', ordem: 2 },
+  { id: 'asfalto', nome: 'Asfalto e brita', ordem: 3 },
+  { id: 'ceramica', nome: 'Cerâmica e revestimento', ordem: 4 },
+  { id: 'eletrico', nome: 'Material elétrico', ordem: 5 },
+  { id: 'hidraulico', nome: 'Material hidráulico', ordem: 6 },
+  { id: 'madeira', nome: 'Madeira e fôrma', ordem: 7 },
+  { id: 'epi', nome: 'EPI e segurança', ordem: 8 },
 ];
 
 export const MOTIVOS_DE_GLOSA: readonly ItemTaxonomia[] = [
@@ -77,11 +142,15 @@ export const TIPOS_DE_DOCUMENTO: readonly ItemTaxonomia[] = [
   { id: 'aso', nome: 'ASO', ordem: 1 },
   { id: 'nr18', nome: 'NR-18', ordem: 2 },
   { id: 'nr35', nome: 'NR-35', ordem: 3 },
-  { id: 'cnd', nome: 'Certidão negativa (CND)', ordem: 4 },
-  { id: 'fgts', nome: 'Certidão de FGTS', ordem: 5 },
-  { id: 'trabalhista', nome: 'Certidão trabalhista', ordem: 6 },
-  { id: 'art', nome: 'ART', ordem: 7 },
-  { id: 'cno', nome: 'CNO', ordem: 8 },
+  { id: 'nr10', nome: 'NR-10', ordem: 4 },
+  { id: 'cnd', nome: 'Certidão negativa (CND)', ordem: 5 },
+  { id: 'fgts', nome: 'Certidão de FGTS', ordem: 6 },
+  { id: 'trabalhista', nome: 'Certidão trabalhista', ordem: 7 },
+  { id: 'art', nome: 'ART', ordem: 8 },
+  { id: 'rrt', nome: 'RRT', ordem: 9 },
+  { id: 'cno', nome: 'CNO', ordem: 10 },
+  { id: 'alvara', nome: 'Alvará de construção', ordem: 11 },
+  { id: 'apolice', nome: 'Apólice de seguro', ordem: 12 },
 ];
 
 export const UNIDADES: readonly ItemTaxonomia[] = [

@@ -12,7 +12,7 @@
 import type { Mundo, Obra } from '@/data/seed';
 import { diasAte, diasDesde } from '@/data/seed';
 import { MOTIVOS_DE_GLOSA, TIPOS_DE_DOCUMENTO, nomeDe } from '@/data/taxonomias';
-import { data, dias, dinheiro, dinheiroCurto, numero, pct, plural } from './formato';
+import { data, dias, dinheiro, dinheiroCurto, haDias, numero, pct, plural } from './formato';
 
 export type TomAviso = 'rust' | 'gold' | 'olive';
 
@@ -61,84 +61,183 @@ export interface RitmoDePagamento {
 }
 
 export function ritmoDePagamento(mundo: Mundo): RitmoDePagamento[] {
-  return mundo.prefeituras
-    .map((pref) => {
-      const obras = mundo.obras.filter((o) => o.prefeituraId === pref.id).map((o) => o.id);
-      const pagas = mundo.medicoes.filter(
-        (m) => obras.includes(m.obraId) && m.dataAceite && m.dataPagamento,
-      );
-      const somaDias = pagas.reduce(
-        (s, m) => s + (diasDesde(m.dataAceite!) - diasDesde(m.dataPagamento!)),
-        0,
-      );
-      return {
-        prefeituraId: pref.id,
-        nome: pref.nome,
-        amostras: pagas.length,
-        mediaDias: pagas.length === 0 ? 0 : Math.round(somaDias / pagas.length),
-      };
-    })
-    // ⚠️ Sem amostra não se afirma média. Prefeitura sem medição paga não aparece.
-    .filter((r) => r.amostras > 0)
-    .sort((a, b) => b.mediaDias - a.mediaDias);
+  return (
+    mundo.prefeituras
+      .map((pref) => {
+        const obras = mundo.obras.filter((o) => o.prefeituraId === pref.id).map((o) => o.id);
+        const pagas = mundo.medicoes.filter(
+          (m) => obras.includes(m.obraId) && m.dataAceite && m.dataPagamento,
+        );
+        const somaDias = pagas.reduce(
+          (s, m) => s + (diasDesde(m.dataAceite!) - diasDesde(m.dataPagamento!)),
+          0,
+        );
+        return {
+          prefeituraId: pref.id,
+          nome: pref.nome,
+          amostras: pagas.length,
+          mediaDias: pagas.length === 0 ? 0 : Math.round(somaDias / pagas.length),
+        };
+      })
+      // ⚠️ Sem amostra não se afirma média. Prefeitura sem medição paga não aparece.
+      .filter((r) => r.amostras > 0)
+      .sort((a, b) => b.mediaDias - a.mediaDias)
+  );
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// 3. Concentração de diárias — a régua é do jurídico da empresa
+// 3. ⚖️ CONCENTRAÇÃO DE EMPREITAS — a régua é do jurídico da empresa
 // ─────────────────────────────────────────────────────────────────────────────
 
+/**
+ * ⚖️ O que esta função É e o que ela NÃO É.
+ *
+ * ELA É: uma contagem. Quantas empreitas seguidas com o mesmo tomador, quantos
+ * dias sem intervalo, qual o percentual de recusa, quantas outras empresas o
+ * parceiro declara atender. Quatro números reais, medidos do que está na tela.
+ *
+ * ⛔ ELA NÃO É: classificação de risco jurídico. Não devolve "alto/médio/baixo",
+ * não recomenda conduta, e **não sugere um número de régua** — isso é parecer de
+ * advogado, e a casa não pratica ato privativo de profissão que não tem.
+ *
+ * O aviso só acende quando **dois ou mais** dos quatro sinais batem ao mesmo
+ * tempo. Um sinal isolado é ruído: quem fez sete empreitas seguidas numa obra
+ * grande e recusou metade das propostas está exercendo autonomia, não a perdendo.
+ */
+export interface SinalDeConcentracao {
+  readonly chave: 'consecutivas' | 'sem-intervalo' | 'recusa' | 'exclusividade';
+  readonly rotulo: string;
+  readonly medido: string;
+  readonly regua: string;
+  readonly bateu: boolean;
+}
+
 export interface Concentracao {
-  readonly prestadorId: string;
+  readonly empreiteiroId: string;
   readonly nome: string;
-  readonly diariasNaJanela: number;
+  readonly empreitas: number;
+  readonly consecutivasMesmoTomador: number;
+  readonly diasSemIntervalo: number;
   readonly obraDominante: string;
   readonly pctNaObraDominante: number;
   readonly encarregadoDominante: string;
-  readonly chamados: number;
+  readonly propostas: number;
   readonly recusas: number;
+  readonly pctRecusa: number;
+  readonly outrasEmpresas: number;
+  readonly sinais: readonly SinalDeConcentracao[];
+  readonly sinaisAcesos: number;
   readonly acimaDaRegua: boolean;
 }
 
 export function concentracoes(mundo: Mundo): Concentracao[] {
-  const { diarias: teto, janelaDias } = mundo.reguaVinculo;
+  const r = mundo.reguaConcentracao;
 
-  return mundo.prestadores
-    .map((p) => {
-      const naJanela = mundo.diarias.filter(
-        (d) => d.prestadorId === p.id && diasDesde(d.data) <= janelaDias,
-      );
-      if (naJanela.length === 0) return null;
+  return mundo.empreiteiros
+    .map((e): Concentracao | null => {
+      const minhas = mundo.empreitas
+        .filter((x) => x.empreiteiroId === e.id)
+        .sort((a, b) => diasDesde(b.inicio) - diasDesde(a.inicio));
+      if (minhas.length === 0) return null;
+
+      // Quantas seguidas com a MESMA obra e o MESMO encarregado recebendo.
+      let consecutivas = 1;
+      for (let i = 1; i < minhas.length; i += 1) {
+        const igual =
+          minhas[i].obraId === minhas[0].obraId && minhas[i].aceitaPor === minhas[0].aceitaPor;
+        if (!igual) break;
+        consecutivas += 1;
+      }
+
+      // Quantos dias correram sem NENHUM intervalo entre uma e a seguinte.
+      // Intervalo = a próxima começou depois de a anterior ser aceita.
+      let diasSemIntervalo = 0;
+      for (let i = 0; i < minhas.length - 1; i += 1) {
+        const atual = minhas[i];
+        const anterior = minhas[i + 1];
+        const fimAnterior = anterior.aceiteEm ?? anterior.inicio;
+        const folga = diasDesde(fimAnterior) - diasDesde(atual.inicio);
+        if (folga > 1) break;
+        diasSemIntervalo += atual.prazoDias;
+      }
+      if (diasSemIntervalo > 0) diasSemIntervalo += minhas[0].prazoDias;
 
       const porObra = new Map<string, number>();
       const porEncarregado = new Map<string, number>();
-      for (const d of naJanela) {
-        porObra.set(d.obraId, (porObra.get(d.obraId) ?? 0) + 1);
-        porEncarregado.set(d.encarregado, (porEncarregado.get(d.encarregado) ?? 0) + 1);
+      for (const x of minhas) {
+        porObra.set(x.obraId, (porObra.get(x.obraId) ?? 0) + 1);
+        porEncarregado.set(x.aceitaPor, (porEncarregado.get(x.aceitaPor) ?? 0) + 1);
       }
       const [obraId, qtdObra] = [...porObra.entries()].sort((a, b) => b[1] - a[1])[0];
       const [encarregado] = [...porEncarregado.entries()].sort((a, b) => b[1] - a[1])[0];
 
-      const meus = mundo.chamados.filter((c) =>
-        c.respostas.some((r) => r.prestadorId === p.id),
+      const minhasPropostas = mundo.propostas.filter((p) =>
+        p.respostas.some((x) => x.empreiteiroId === e.id),
       );
-      const recusas = meus.filter((c) =>
-        c.respostas.some((r) => r.prestadorId === p.id && r.estado === 'recusou'),
+      const recusas = minhasPropostas.filter((p) =>
+        p.respostas.some((x) => x.empreiteiroId === e.id && x.estado === 'recusou'),
       ).length;
+      const pctRecusa =
+        minhasPropostas.length === 0 ? 0 : Math.round((recusas / minhasPropostas.length) * 100);
+
+      // ⚠️ O sinal de recusa só vale com amostra: zero recusa em 3 propostas não
+      // diz nada, e dizer que diz seria inventar sinal onde não há.
+      const temAmostra = minhasPropostas.length >= 5;
+
+      const sinais: SinalDeConcentracao[] = [
+        {
+          chave: 'consecutivas',
+          rotulo: 'Empreitas seguidas com o mesmo tomador',
+          medido: `${consecutivas}`,
+          regua: `${r.empreitasConsecutivas}`,
+          bateu: consecutivas >= r.empreitasConsecutivas,
+        },
+        {
+          chave: 'sem-intervalo',
+          rotulo: 'Dias corridos sem intervalo entre empreitas',
+          medido: `${diasSemIntervalo}`,
+          regua: `${r.diasSemIntervalo}`,
+          bateu: diasSemIntervalo >= r.diasSemIntervalo,
+        },
+        {
+          chave: 'recusa',
+          rotulo: 'Percentual de propostas recusadas',
+          medido: temAmostra ? `${pctRecusa}%` : 'sem amostra',
+          regua: `mínimo ${r.pctRecusaMinimo}%`,
+          bateu: temAmostra && pctRecusa < r.pctRecusaMinimo,
+        },
+        {
+          chave: 'exclusividade',
+          rotulo: 'Outras empresas que declara atender',
+          medido: `${e.outrasEmpresas}`,
+          regua: `mínimo ${r.outrasEmpresasMinimo}`,
+          bateu: e.outrasEmpresas < r.outrasEmpresasMinimo,
+        },
+      ];
+
+      const sinaisAcesos = sinais.filter((x) => x.bateu).length;
 
       return {
-        prestadorId: p.id,
-        nome: p.nome,
-        diariasNaJanela: naJanela.length,
+        empreiteiroId: e.id,
+        nome: e.nome,
+        empreitas: minhas.length,
+        consecutivasMesmoTomador: consecutivas,
+        diasSemIntervalo,
         obraDominante: obraDe(mundo, obraId).nome,
-        pctNaObraDominante: Math.round((qtdObra / naJanela.length) * 100),
+        pctNaObraDominante: Math.round((qtdObra / minhas.length) * 100),
         encarregadoDominante: encarregado,
-        chamados: meus.length,
+        propostas: minhasPropostas.length,
         recusas,
-        acimaDaRegua: naJanela.length >= teto,
+        pctRecusa,
+        outrasEmpresas: e.outrasEmpresas,
+        sinais,
+        sinaisAcesos,
+        // ⭐ Dois sinais, não um. Um isolado é ruído.
+        acimaDaRegua: sinaisAcesos >= 2,
       };
     })
     .filter((c): c is Concentracao => c !== null)
-    .sort((a, b) => b.diariasNaJanela - a.diariasNaJanela);
+    .sort((a, b) => b.sinaisAcesos - a.sinaisAcesos || b.empreitas - a.empreitas);
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -329,22 +428,25 @@ export function avisos(mundo: Mundo): Aviso[] {
     });
   }
 
-  // 4 — concentração de diárias
+  // 4 — ⚖️ concentração de empreitas (dois sinais ou mais)
   const conc = concentracoes(mundo).find((c) => c.acimaDaRegua);
   if (conc) {
+    const acesos = conc.sinais.filter((x) => x.bateu);
     saida.push({
       id: 'concentracao',
       tom: 'rust',
-      titulo: `${conc.nome}: ${conc.diariasNaJanela} diárias em ${dias(mundo.reguaVinculo.janelaDias)}`,
-      detalhe: `${conc.pctNaObraDominante}% na mesma obra · ${plural(conc.recusas, 'recusa', 'recusas')} em ${plural(conc.chamados, 'chamado', 'chamados')}`,
+      titulo: `${conc.nome}: ${plural(acesos.length, 'sinal', 'sinais')} de concentração`,
+      detalhe: acesos.map((x) => x.rotulo.toLowerCase()).join(' · '),
       porque: [
-        `Diárias lançadas nos últimos ${dias(mundo.reguaVinculo.janelaDias)}: ${conc.diariasNaJanela}.`,
-        `${conc.pctNaObraDominante}% delas na obra ${conc.obraDominante}, chamadas por ${conc.encarregadoDominante}.`,
-        `Chamados recebidos: ${conc.chamados}. Recusados: ${conc.recusas}.`,
-        `A régua desta empresa é ${mundo.reguaVinculo.diarias} diárias em ${dias(mundo.reguaVinculo.janelaDias)} — definida pelo jurídico da empresa, não pelo sistema.`,
+        ...conc.sinais.map(
+          (x) =>
+            `${x.rotulo}: ${x.medido} (régua desta empresa: ${x.regua})${x.bateu ? ' — acima' : ''}.`,
+        ),
+        `${conc.pctNaObraDominante}% das empreitas na obra ${conc.obraDominante}, recebidas por ${conc.encarregadoDominante}.`,
+        'A régua é definida pelo jurídico da empresa em Configurações. O sistema não sugere número, e este aviso não decide nada — mostra o que está acontecendo enquanto ainda dá tempo.',
       ],
-      fonte: 'Diaristas e chamados',
-      href: '/diaristas',
+      fonte: 'Empreiteiros',
+      href: '/empreiteiros',
       notadoHaMin: 26,
     });
   }
@@ -358,7 +460,7 @@ export function avisos(mundo: Mundo): Aviso[] {
       titulo: `${semDiario.obraNome} está sem diário há ${dias(semDiario.diasSemDiario)}`,
       detalhe: 'Sem diário, a medição do mês fica sem prova de execução',
       porque: [
-        `Último registro no diário desta obra: ${dias(semDiario.diasSemDiario)} atrás.`,
+        `Último registro no diário desta obra: ${haDias(semDiario.diasSemDiario)}.`,
         `O boletim de medição se apoia no diário para provar o que foi executado no período.`,
         `Quem registra é o encarregado da frente.`,
       ],
@@ -454,6 +556,159 @@ export function avisos(mundo: Mundo): Aviso[] {
     });
   }
 
+  // 10 — ⏱ ofício do órgão com prazo vencido
+  const oficioVencido = mundo.oficios
+    .filter((o) => o.estado === 'vencido' && o.respondidoEm === null)
+    .sort((a, b) => diasDesde(b.em) - diasDesde(a.em))[0];
+  if (oficioVencido) {
+    const obra = obraDe(mundo, oficioVencido.obraId);
+    const atraso = oficioVencido.prazoResposta ? diasDesde(oficioVencido.prazoResposta) : 0;
+    saida.push({
+      id: 'oficio-vencido',
+      tom: 'rust',
+      titulo: `${oficioVencido.numero} sem resposta há ${dias(atraso)} do prazo`,
+      detalhe: `${obra.nome} · ${oficioVencido.assunto}`,
+      porque: [
+        `O ofício chegou em ${data(oficioVencido.em)}.`,
+        `O prazo de resposta era ${data(oficioVencido.prazoResposta!)}.`,
+        `Não há registro de resposta até hoje — ${dias(atraso)} além do prazo.`,
+        `Responsável apontado: ${oficioVencido.responsavel}.`,
+      ],
+      fonte: 'Fiscalização',
+      href: '/fiscalizacao',
+      notadoHaMin: 8,
+    });
+  }
+
+  // 11 — 💸 conta vencida e não paga
+  const vencidas = mundo.contasAPagar.filter((c) => c.pagoEm === null && diasAte(c.vence) < 0);
+  if (vencidas.length > 0) {
+    const total = vencidas.reduce((s, c) => s + c.valorCents, 0);
+    const pior = vencidas.sort((a, b) => diasDesde(b.vence) - diasDesde(a.vence))[0];
+    saida.push({
+      id: 'conta-vencida',
+      tom: 'rust',
+      titulo: `${dinheiroCurto(total)} vencidos e não pagos`,
+      detalhe: `${plural(vencidas.length, 'conta', 'contas')} · a mais antiga é ${pior.favorecido}`,
+      porque: [
+        `${plural(vencidas.length, 'conta a pagar venceu', 'contas a pagar venceram')} e não têm registro de pagamento.`,
+        `A mais antiga venceu em ${data(pior.vence)} — há ${dias(diasDesde(pior.vence))}.`,
+        `Somando todas: ${dinheiro(total)}.`,
+        'Fornecedor que espera demais cobra mais caro na cotação seguinte.',
+      ],
+      fonte: 'Caixa por obra',
+      href: '/financeiro',
+      notadoHaMin: 34,
+    });
+  }
+
+  // 12 — 📦 recebimento com divergência sem tratativa
+  const divergentes = mundo.compras.filter((c) => c.divergencia !== 0);
+  if (divergentes.length > 0) {
+    saida.push({
+      id: 'divergencia',
+      tom: 'gold',
+      titulo: `${plural(divergentes.length, 'recebimento chegou', 'recebimentos chegaram')} a menos do que o pedido`,
+      detalhe: divergentes
+        .slice(0, 2)
+        .map((c) => c.descricao)
+        .join(' · '),
+      porque: [
+        ...divergentes
+          .slice(0, 4)
+          .map((c) => `${c.descricao}: faltaram ${numero(-c.divergencia)} ${c.unidade}.`),
+        'Cada divergência é dinheiro que saiu do orçamento da obra sem material dentro dela.',
+      ],
+      fonte: 'Compras e materiais',
+      href: '/compras',
+      notadoHaMin: 51,
+    });
+  }
+
+  // 13 — 🚜 equipamento fora de operação
+  const parado = mundo.equipamentos.find((e) => e.estado === 'parado');
+  if (parado) {
+    const obra = obraDe(mundo, parado.obraId);
+    const vencida =
+      parado.proximaManutencaoHoras > 0 && parado.horimetro > parado.proximaManutencaoHoras;
+    saida.push({
+      id: 'equipamento-parado',
+      tom: 'gold',
+      titulo: `${parado.nome} parado na ${obra.nome}`,
+      detalhe: vencida
+        ? `horímetro ${numero(parado.horimetro)} h — manutenção era para ${numero(parado.proximaManutencaoHoras)} h`
+        : `patrimônio ${parado.patrimonio}`,
+      porque: [
+        `O equipamento ${parado.patrimonio} está marcado como parado.`,
+        `Está alocado na obra ${obra.nome} desde ${data(parado.desde)}.`,
+        vencida
+          ? `O horímetro passou da próxima manutenção em ${numero(parado.horimetro - parado.proximaManutencaoHoras)} h.`
+          : 'Não há manutenção vencida registrada para ele.',
+        'Máquina parada é frente de serviço andando mais devagar — e prazo de contrato correndo igual.',
+      ],
+      fonte: 'Equipamentos',
+      href: '/equipamentos',
+      notadoHaMin: 77,
+    });
+  }
+
+  // 14 — 🚚 fornecedor que atrasa e diverge
+  const ruins = mundo.fornecedores
+    .filter((f) => f.estado === 'ativo')
+    .map((f) => {
+      const minhas = mundo.compras.filter((c) => c.fornecedorEscolhido === f.id);
+      return {
+        f,
+        compras: minhas.length,
+        divergentes: minhas.filter((c) => c.divergencia !== 0).length,
+      };
+    })
+    .filter((x) => x.compras >= 3 && (x.f.prazoMedioDias >= 10 || x.divergentes >= 2))
+    .sort((a, b) => b.f.prazoMedioDias - a.f.prazoMedioDias)[0];
+  if (ruins) {
+    saida.push({
+      id: 'fornecedor',
+      tom: 'gold',
+      titulo: `${ruins.f.nome} entrega em ${dias(ruins.f.prazoMedioDias)}, em média`,
+      detalhe:
+        ruins.divergentes > 0
+          ? `${plural(ruins.divergentes, 'recebimento divergente', 'recebimentos divergentes')} em ${plural(ruins.compras, 'compra', 'compras')}`
+          : `${plural(ruins.compras, 'compra', 'compras')} no período`,
+      porque: [
+        `Prazo médio de entrega registrado: ${dias(ruins.f.prazoMedioDias)}.`,
+        `Compras fechadas com ele: ${ruins.compras}.`,
+        `Recebimentos com divergência: ${ruins.divergentes}.`,
+        'Prazo longo em material de caminho crítico vira parada de frente.',
+      ],
+      fonte: 'Fornecedores',
+      href: '/fornecedores',
+      notadoHaMin: 96,
+    });
+  }
+
+  // 15 — ⏳ a pendência que envelheceu demais
+  const velhas = mundo.pendencias
+    .map((p) => ({ p, idade: diasDesde(p.abertaEm) }))
+    .sort((a, b) => b.idade - a.idade);
+  if (velhas.length > 0 && velhas[0].idade >= 30) {
+    const media = Math.round(velhas.reduce((s, x) => s + x.idade, 0) / velhas.length);
+    saida.push({
+      id: 'pendencia-velha',
+      tom: 'gold',
+      titulo: `A pendência mais velha da casa tem ${dias(velhas[0].idade)}`,
+      detalhe: velhas[0].p.titulo,
+      porque: [
+        `Pendências abertas no momento: ${velhas.length}.`,
+        `Idade média: ${dias(media)}.`,
+        `A mais velha foi aberta em ${data(velhas[0].p.abertaEm)} e está com ${velhas[0].p.responsavel}.`,
+        'A conta é de idade, não de volume: muitas pendências novas é trabalho andando; poucas e velhas é processo travado.',
+      ],
+      fonte: 'Resolutividade',
+      href: '/resolutividade',
+      notadoHaMin: 148,
+    });
+  }
+
   return saida;
 }
 
@@ -482,7 +737,20 @@ function mesDe(iso: string): string {
   return iso.slice(0, 7);
 }
 
-const NOMES_MES = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
+const NOMES_MES = [
+  'jan',
+  'fev',
+  'mar',
+  'abr',
+  'mai',
+  'jun',
+  'jul',
+  'ago',
+  'set',
+  'out',
+  'nov',
+  'dez',
+];
 
 function rotuloDoMes(mes: string): string {
   const [, m] = mes.split('-');

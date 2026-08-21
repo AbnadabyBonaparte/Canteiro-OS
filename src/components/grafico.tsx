@@ -45,7 +45,8 @@ export function GraficoDeCaixa({ meses }: { meses: readonly MesDeCaixa[] }) {
   const larguraBarra = larguraGrupo * 0.32;
   const destaque = meses.reduce(
     (pior, m, i) =>
-      m.previstoCents - m.realizadoCents > (meses[pior]?.previstoCents ?? 0) - (meses[pior]?.realizadoCents ?? 0)
+      m.previstoCents - m.realizadoCents >
+      (meses[pior]?.previstoCents ?? 0) - (meses[pior]?.realizadoCents ?? 0)
         ? i
         : pior,
     0,
@@ -75,7 +76,13 @@ export function GraficoDeCaixa({ meses }: { meses: readonly MesDeCaixa[] }) {
           aria-label="Caixa mês a mês: previsto pelo contrato contra realizado"
         >
           <defs>
-            <pattern id={hachura} width="4" height="4" patternUnits="userSpaceOnUse" patternTransform="rotate(135)">
+            <pattern
+              id={hachura}
+              width="4"
+              height="4"
+              patternUnits="userSpaceOnUse"
+              patternTransform="rotate(135)"
+            >
               <rect width="4" height="4" fill="transparent" />
               <line x1="0" y1="0" x2="0" y2="4" stroke="var(--color-concrete)" strokeWidth="1.4" />
             </pattern>
@@ -137,7 +144,10 @@ export function GraficoDeCaixa({ meses }: { meses: readonly MesDeCaixa[] }) {
         {/* Eixo dos meses, fora do desenho para o rótulo nunca ser cortado. */}
         <div
           className="absolute inset-x-0 bottom-0 grid"
-          style={{ gridTemplateColumns: `repeat(${meses.length}, minmax(0, 1fr))`, height: BANDA_EIXO }}
+          style={{
+            gridTemplateColumns: `repeat(${meses.length}, minmax(0, 1fr))`,
+            height: BANDA_EIXO,
+          }}
         >
           {meses.map((m, i) => (
             <span
@@ -157,7 +167,11 @@ export function GraficoDeCaixa({ meses }: { meses: readonly MesDeCaixa[] }) {
         <p className="mt-2 text-[13px] leading-snug text-concrete">
           Pior mês: <span className="text-chalk">{meses[destaque].rotulo}</span> — esperado{' '}
           <span className="num text-chalk">{dinheiroCurto(meses[destaque].previstoCents)}</span>,
-          entrou <span className="num text-rust-bright">{dinheiroCurto(meses[destaque].realizadoCents)}</span>.
+          entrou{' '}
+          <span className="num text-rust-bright">
+            {dinheiroCurto(meses[destaque].realizadoCents)}
+          </span>
+          .
         </p>
       ) : null}
 

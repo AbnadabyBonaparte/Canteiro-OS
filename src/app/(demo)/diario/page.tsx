@@ -31,6 +31,7 @@ import {
   Vazio,
 } from '@/components/ui';
 import { Camera, Microfone } from '@/components/icones';
+import { Foto } from '@/components/imagem';
 import { CLIMAS, FRENTES, GRAVIDADES, MOTIVOS_DE_OCORRENCIA, nomeDe } from '@/data/taxonomias';
 import { data, dataCurta } from '@/lib/formato';
 import { DATA_REF, diasAtras } from '@/data/seed';
@@ -56,10 +57,7 @@ export default function Diario() {
   const obra = mundo.obras.find((o) => o.id === obraId)!;
   const hora = '16:40';
 
-  const frentesDaObra = useMemo(
-    () => FRENTES.filter((f) => obra.frentes.includes(f.id)),
-    [obra],
-  );
+  const frentesDaObra = useMemo(() => FRENTES.filter((f) => obra.frentes.includes(f.id)), [obra]);
 
   const gravidadeId = motivos.includes('acidente')
     ? 'paralisa'
@@ -103,6 +101,9 @@ export default function Diario() {
     <div className="mx-auto max-w-6xl lg:grid lg:grid-cols-[minmax(0,380px)_1fr] lg:gap-8">
       {/* ── O formulário de 20 segundos ─────────────────────────────────── */}
       <section>
+        <div className="mb-4">
+          <Foto nome="cena-trena" altura="cena" legenda="ilustrativa" />
+        </div>
         <TituloSecao>Registrar o dia</TituloSecao>
         <Cartao className="space-y-5 p-4 sm:p-5">
           <Selecione
@@ -128,7 +129,12 @@ export default function Diario() {
           </div>
 
           <div className="grid grid-cols-2 gap-3">
-            <Selecione etiqueta="Frente" valor={frenteId} onChange={setFrenteId} opcoes={frentesDaObra} />
+            <Selecione
+              etiqueta="Frente"
+              valor={frenteId}
+              onChange={setFrenteId}
+              opcoes={frentesDaObra}
+            />
             <Selecione etiqueta="Clima" valor={climaId} onChange={setClimaId} opcoes={CLIMAS} />
           </div>
 
@@ -154,15 +160,19 @@ export default function Diario() {
                 <Microfone className="h-4 w-4" />
                 Ditar
               </Botao>
-              <Botao tom={temFoto ? 'principal' : 'secundario'} larga onClick={() => setTemFoto((f) => !f)}>
+              <Botao
+                tom={temFoto ? 'principal' : 'secundario'}
+                larga
+                onClick={() => setTemFoto((f) => !f)}
+              >
                 <Camera className="h-4 w-4" />
                 {temFoto ? 'Foto anexada' : 'Anexar foto'}
               </Botao>
             </div>
             {ditando ? (
               <p className="mt-2 text-[12px] leading-snug text-concrete-dim">
-                Nesta demonstração o ditado escreve um texto de exemplo. No sistema, o que você
-                fala vira texto no aparelho — e o áudio original fica anexado.
+                Nesta demonstração o ditado escreve um texto de exemplo. No sistema, o que você fala
+                vira texto no aparelho — e o áudio original fica anexado.
               </p>
             ) : null}
           </div>
@@ -267,7 +277,9 @@ function Linha({
         </div>
       </div>
 
-      <p className={`mt-2 text-[15px] leading-snug ${cancelada ? 'text-concrete line-through' : 'text-chalk'}`}>
+      <p
+        className={`mt-2 text-[15px] leading-snug ${cancelada ? 'text-concrete line-through' : 'text-chalk'}`}
+      >
         {entrada.observacao}
       </p>
 

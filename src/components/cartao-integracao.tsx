@@ -11,15 +11,16 @@
 
 import { Tomada } from './icones';
 
-export function CartaoIntegracao({
-  titulo,
-  descricao,
-}: {
-  titulo: string;
-  descricao: string;
-}) {
+export function CartaoIntegracao({ titulo, descricao }: { titulo: string; descricao: string }) {
   return (
-    <div className="honesto flex items-start gap-3 p-4">
+    <div className="honesto relative isolate flex items-start gap-3 overflow-hidden p-4">
+      {/* ⭐ O chão de concreto. Textura, não ilustração: dá superfície à placa
+          sem inventar um botão. Vai como fundo de CSS, não como <img> — é
+          decoração pura e não deve virar item da árvore de acessibilidade. */}
+      <span
+        aria-hidden
+        className="absolute inset-0 -z-10 bg-[url('/img/textura-concreto.webp')] bg-cover bg-center opacity-[0.07]"
+      />
       <Tomada className="mt-0.5 h-5 w-5 shrink-0 text-concrete-dim" />
       <div>
         <p className="placa text-[11px] text-concrete">{titulo}</p>

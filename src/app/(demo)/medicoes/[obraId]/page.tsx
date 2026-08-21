@@ -58,12 +58,16 @@ export default function MedicaoDaObra() {
 
   if (!obra) {
     return (
-      <Vazio titulo="Obra não encontrada." dica="Volte ao painel e escolha uma das obras da carteira." />
+      <Vazio
+        titulo="Obra não encontrada."
+        dica="Volte ao painel e escolha uma das obras da carteira."
+      />
     );
   }
 
   const pref = mundo.prefeituras.find((p) => p.id === obra.prefeituraId)!;
-  const aberta = medicoes.find((m) => m.id === abertaId) ?? medicoes.find((m) => m.numero === 4) ?? medicoes[0];
+  const aberta =
+    medicoes.find((m) => m.id === abertaId) ?? medicoes.find((m) => m.numero === 4) ?? medicoes[0];
   const itens = mundo.itens.filter((i) => i.obraId === obra.id);
   const ritmo = ritmoDePagamento(mundo).find((r) => r.prefeituraId === pref.id);
   const caixa = caixaPorMes(mundo, obra.id);
@@ -101,8 +105,8 @@ export default function MedicaoDaObra() {
           {aberta.aceitoCents > 0 && aberta.pagoCents === 0 && aberta.dataAceite ? (
             <p className="mt-4 border-l-2 border-rust/70 bg-rust/8 px-3 py-2.5 text-[14px] leading-snug text-chalk">
               Aceita pelo fiscal em {data(aberta.dataAceite)} —{' '}
-              <span className="num text-rust-bright">{dias(diasDesde(aberta.dataAceite))}</span>{' '}
-              sem pagamento.
+              <span className="num text-rust-bright">{dias(diasDesde(aberta.dataAceite))}</span> sem
+              pagamento.
             </p>
           ) : null}
         </Cartao>
@@ -127,7 +131,10 @@ export default function MedicaoDaObra() {
                 etiqueta="Serviço"
                 valor={itemNumero}
                 onChange={setItemNumero}
-                opcoes={itens.map((i) => ({ id: String(i.numero), nome: `${i.numero}. ${i.descricao}` }))}
+                opcoes={itens.map((i) => ({
+                  id: String(i.numero),
+                  nome: `${i.numero}. ${i.descricao}`,
+                }))}
               />
               <Selecione
                 etiqueta="Motivo da glosa"
@@ -135,7 +142,12 @@ export default function MedicaoDaObra() {
                 onChange={setMotivoId}
                 opcoes={MOTIVOS_DE_GLOSA}
               />
-              <Campo etiqueta="Valor glosado (R$)" valor={valor} onChange={setValor} tipo="number" />
+              <Campo
+                etiqueta="Valor glosado (R$)"
+                valor={valor}
+                onChange={setValor}
+                tipo="number"
+              />
             </div>
             <p className="text-[13px] leading-snug text-concrete">
               O motivo é obrigatório e sai da lista da sua empresa, não de uma lista nossa. Glosa
@@ -253,7 +265,9 @@ export default function MedicaoDaObra() {
               type="button"
               onClick={() => setAbertaId(m.id)}
               className={`flex w-full flex-wrap items-center justify-between gap-3 border px-4 py-3 text-left ${
-                m.id === aberta.id ? 'border-gold/45 bg-gold/8' : 'border-line bg-surface hover:border-line-strong'
+                m.id === aberta.id
+                  ? 'border-gold/45 bg-gold/8'
+                  : 'border-line bg-surface hover:border-line-strong'
               }`}
             >
               <span className="flex items-center gap-3">
@@ -262,7 +276,9 @@ export default function MedicaoDaObra() {
               </span>
               <span className="flex items-center gap-4 text-[13px]">
                 <span className="num text-concrete">aceito {dinheiro(m.aceitoCents)}</span>
-                <span className={`num ${m.pagoCents === 0 && m.aceitoCents > 0 ? 'text-rust-bright' : 'text-concrete'}`}>
+                <span
+                  className={`num ${m.pagoCents === 0 && m.aceitoCents > 0 ? 'text-rust-bright' : 'text-concrete'}`}
+                >
                   pago {dinheiro(m.pagoCents)}
                 </span>
               </span>
@@ -286,7 +302,11 @@ export default function MedicaoDaObra() {
 }
 
 function Th({ children, className = '' }: { children: React.ReactNode; className?: string }) {
-  return <th className={`placa px-3 py-2.5 text-[10px] font-normal text-concrete ${className}`}>{children}</th>;
+  return (
+    <th className={`placa px-3 py-2.5 text-[10px] font-normal text-concrete ${className}`}>
+      {children}
+    </th>
+  );
 }
 
 function Td({ children, className = '' }: { children: React.ReactNode; className?: string }) {

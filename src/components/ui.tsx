@@ -283,14 +283,28 @@ export function Etiqueta({ tom = 'neutro', children }: { tom?: Tom; children: Re
 
 export function Vazio({ titulo, dica }: { titulo: string; dica: string }) {
   return (
-    <div className="border border-dashed border-line px-5 py-10 text-center">
+    <div className="relative isolate overflow-hidden border border-dashed border-line px-5 py-10 text-center">
+      {/* ⭐ Papel de projeto por baixo do vazio. Tela sem dado não precisa ser
+          tela sem superfície — e um vazio com chão não parece defeito. */}
+      <span
+        aria-hidden
+        className="absolute inset-0 -z-10 bg-[url('/img/textura-projeto.webp')] bg-cover bg-center opacity-[0.06]"
+      />
       <p className="text-[15px] text-chalk">{titulo}</p>
       <p className="mt-1.5 text-[13px] text-concrete">{dica}</p>
     </div>
   );
 }
 
-export function Erro({ titulo, dica, aoTentar }: { titulo: string; dica: string; aoTentar?: () => void }) {
+export function Erro({
+  titulo,
+  dica,
+  aoTentar,
+}: {
+  titulo: string;
+  dica: string;
+  aoTentar?: () => void;
+}) {
   return (
     <div className="border border-rust/50 bg-rust/8 px-5 py-8 text-center">
       <Prumo className="mx-auto mb-2 h-6 w-6 text-rust-bright" />
@@ -408,6 +422,98 @@ export function Confirmar({
           </Botao>
         </div>
       </div>
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// v2 — O CABEÇALHO DE SALA
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Toda sala abre igual: o nome em placa de obra, uma linha que diz para que ela
+ * serve, e — quando faz sentido — um número grande à direita. ⛔ Nunca uma
+ * fileira de cartões iguais só para preencher (docs/DESIGN.md §6, defeito 1).
+ */
+export function Sala({
+  titulo,
+  linha,
+  numero,
+  rotuloNumero,
+  tomNumero,
+  acao,
+}: {
+  titulo: string;
+  linha: string;
+  numero?: string;
+  rotuloNumero?: string;
+  tomNumero?: 'gold' | 'rust' | 'chalk' | 'olive';
+  acao?: React.ReactNode;
+}) {
+  const cor =
+    tomNumero === 'rust'
+      ? 'text-rust-bright'
+      : tomNumero === 'olive'
+        ? 'text-olive-bright'
+        : tomNumero === 'chalk'
+          ? 'text-chalk'
+          : 'text-gold-bright';
+  return (
+    <header className="mb-6 flex flex-wrap items-end justify-between gap-4 border-b border-line pb-4">
+      <div className="min-w-0">
+        <h1 className="placa text-[19px] leading-tight text-chalk sm:text-[22px]">{titulo}</h1>
+        <p className="mt-1.5 max-w-2xl text-[14px] leading-snug text-concrete">{linha}</p>
+      </div>
+      {numero ? (
+        <div className="text-right">
+          {rotuloNumero ? (
+            <div className="placa text-[10px] text-concrete-dim">{rotuloNumero}</div>
+          ) : null}
+          <div className={`num text-[28px] leading-none sm:text-[34px] ${cor}`}>{numero}</div>
+        </div>
+      ) : null}
+      {acao}
+    </header>
+  );
+}
+
+/** Uma linha de lista: rótulo à esquerda, valor à direita, etiquetas embaixo. */
+export function Linha({
+  titulo,
+  subtitulo,
+  valor,
+  valorTom,
+  etiquetas,
+  acao,
+}: {
+  titulo: React.ReactNode;
+  subtitulo?: React.ReactNode;
+  valor?: string;
+  valorTom?: 'rust' | 'olive' | 'gold';
+  etiquetas?: React.ReactNode;
+  acao?: React.ReactNode;
+}) {
+  const cor =
+    valorTom === 'rust'
+      ? 'text-rust-bright'
+      : valorTom === 'olive'
+        ? 'text-olive-bright'
+        : valorTom === 'gold'
+          ? 'text-gold-bright'
+          : 'text-chalk';
+  return (
+    <div className="border-b border-line px-4 py-3 last:border-0">
+      <div className="flex flex-wrap items-baseline justify-between gap-3">
+        <div className="min-w-0 flex-1">
+          <div className="text-[15px] leading-snug text-chalk">{titulo}</div>
+          {subtitulo ? (
+            <div className="mt-0.5 text-[12px] text-concrete-dim">{subtitulo}</div>
+          ) : null}
+        </div>
+        {valor ? <div className={`num shrink-0 text-[15px] ${cor}`}>{valor}</div> : null}
+        {acao ? <div className="shrink-0">{acao}</div> : null}
+      </div>
+      {etiquetas ? <div className="mt-2 flex flex-wrap gap-2">{etiquetas}</div> : null}
     </div>
   );
 }

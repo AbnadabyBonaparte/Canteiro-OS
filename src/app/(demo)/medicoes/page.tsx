@@ -31,7 +31,10 @@ export default function Medicoes() {
 
         return (
           <Cartao key={obra.id} className="p-5">
-            <Link href={`/medicoes/${obra.id}`} className="group flex items-start justify-between gap-4">
+            <Link
+              href={`/medicoes/${obra.id}`}
+              className="group flex items-start justify-between gap-4"
+            >
               <div className="min-w-0">
                 <h3 className="placa text-[15px] text-chalk group-hover:text-gold-bright">
                   {obra.nome}
