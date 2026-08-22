@@ -253,3 +253,16 @@ export function Obra({ className }: P) {
     </svg>
   );
 }
+
+/** Caminhão de carroceria — a remessa: o que sai do pátio com guia. */
+export function Caminhao({ className }: P) {
+  return (
+    <svg {...base} className={className}>
+      <path d="M2.5 6.5h11v10h-11z" />
+      <path d="M13.5 10h3.5l3.5 3v3.5h-7z" />
+      <circle cx="6.5" cy="18.5" r="2" />
+      <circle cx="17" cy="18.5" r="2" />
+      <path d="M8.5 18.5h6.5" />
+    </svg>
+  );
+}

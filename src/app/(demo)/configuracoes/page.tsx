@@ -15,6 +15,7 @@
 import Image from 'next/image';
 import { useState } from 'react';
 import { definirReguaConcentracao, useMundo } from '@/lib/store';
+import { cardapio } from '@/lib/remessa';
 import { Botao, Campo, Cartao, Etiqueta, Rotulo, Sala, TituloSecao } from '@/components/ui';
 import { todasAsPecas } from '@/lib/imagens';
 import {
@@ -35,7 +36,7 @@ import {
   UNIDADES,
   type ItemTaxonomia,
 } from '@/data/taxonomias';
-import { plural } from '@/lib/formato';
+import { data, plural } from '@/lib/formato';
 import { PRODUTO } from '@/lib/tenant';
 
 const LISTAS: ReadonlyArray<{
@@ -75,6 +76,7 @@ const LISTAS: ReadonlyArray<{
 export default function Configuracoes() {
   const mundo = useMundo();
   const r = mundo.reguaConcentracao;
+  const itensDoCardapio = cardapio(mundo);
   const [editando, setEditando] = useState(false);
   const [a, setA] = useState(String(r.empreitasConsecutivas));
   const [b, setB] = useState(String(r.diasSemIntervalo));
@@ -152,6 +154,63 @@ export default function Configuracoes() {
             o que está acontecendo enquanto ainda dá tempo de mudar.
           </p>
         </Cartao>
+      </section>
+
+      {/* ── ⭐⭐ O CARDÁPIO FISCAL ───────────────────────────────────────────
+          O lugar onde a mesa vê, preto no branco, que a ALSHAM não escolhe
+          código fiscal por ninguém. Quem assina responde; o sistema guarda. */}
+      <section id="cardapio" className="mb-8 scroll-mt-24">
+        <TituloSecao>O cardápio das saídas</TituloSecao>
+        <p className="-mt-3 mb-4 max-w-3xl text-[14px] leading-snug text-concrete">
+          Cada botão aqui é uma operação que o pessoal do pátio pode usar no celular.{' '}
+          <span className="text-chalk">
+            O sistema não sugere código fiscal — quem define e assina é o contador da empresa,
+          </span>{' '}
+          e o que aparece abaixo é o registro de quem assinou, quando e com base em quê. O código é
+          ilustrativo nesta demonstração.
+        </p>
+        {/* ⚠️ `content-visibility` porque esta seção é longa e nasce fora da
+            dobra: sem ela, o navegador pinta seis cartões que ninguém está
+            olhando e atrasa o que está na tela. Medido — não palpite. */}
+        <div className="grid gap-3 [content-visibility:auto] [contain-intrinsic-size:auto_900px] md:grid-cols-2">
+          {itensDoCardapio.map(({ operacao, usavel, nota }) => (
+            <Cartao key={operacao.id} className="p-4">
+              <div className="flex flex-wrap items-center gap-2">
+                <Etiqueta tom={usavel ? 'olive' : 'neutro'}>
+                  {usavel ? 'assinada' : 'sem assinatura'}
+                </Etiqueta>
+                <span className="num text-[12px] text-concrete-dim">
+                  CFOP {operacao.cfop === '' ? '—' : operacao.cfop} (ilustrativo)
+                </span>
+              </div>
+              <h3 className="mt-2 text-[15px] leading-snug text-chalk">{operacao.rotulo}</h3>
+              <p className="mt-0.5 text-[13px] leading-snug text-concrete">{operacao.natureza}</p>
+              <p className="mt-2 text-[13px] leading-snug text-concrete">
+                {operacao.exigeManifesto ? 'Sai com nota e manifesto' : 'Sai só com nota'}
+                {operacao.exigeRetorno && operacao.prazoRetornoDias !== null
+                  ? ` · cobra volta em ${operacao.prazoRetornoDias} dias`
+                  : ''}
+                .
+              </p>
+              {operacao.assinatura ? (
+                <p className="mt-2 border-t border-line pt-2 text-[12px] leading-snug text-concrete-dim">
+                  Assinada pelo {operacao.assinatura.por} ({operacao.assinatura.papel}) em{' '}
+                  {data(operacao.assinatura.em)} · {operacao.assinatura.fonte}
+                </p>
+              ) : (
+                <p className="mt-2 border-t border-line pt-2 text-[12px] leading-snug text-concrete-dim">
+                  {nota}. Ela continua na lista de propósito: se sumisse, o encarregado ia procurar,
+                  não achar, e gastar a manhã de alguém no telefone.
+                </p>
+              )}
+            </Cartao>
+          ))}
+        </div>
+        <p className="mt-3 max-w-3xl text-[14px] leading-snug text-concrete">
+          Para emitir de verdade faltam três coisas que{' '}
+          <span className="text-chalk">não são do sistema</span>: a inscrição estadual da empresa, o
+          certificado digital dela — que fica com o emissor, nunca aqui — e este cardápio assinado.
+        </p>
       </section>
 
       <section className="mb-8">

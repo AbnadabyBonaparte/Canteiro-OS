@@ -339,6 +339,7 @@ export function Confirmar({
   descricao,
   rotuloMotivo,
   rotuloAcao,
+  tomAcao = 'perigo',
   aoConfirmar,
   aoFechar,
 }: {
@@ -347,6 +348,8 @@ export function Confirmar({
   descricao: string;
   rotuloMotivo?: string;
   rotuloAcao: string;
+  /** ⭐ Óxido para o que desfaz; latão para o que decide. Emitir decide. */
+  tomAcao?: TomBotao;
   aoConfirmar: (motivo: string) => void;
   aoFechar: () => void;
 }) {
@@ -407,7 +410,7 @@ export function Confirmar({
 
         <div className="mt-5 flex flex-col gap-2 sm:flex-row-reverse">
           <Botao
-            tom="perigo"
+            tom={tomAcao}
             larga
             disabled={!podeSeguir}
             onClick={() => {

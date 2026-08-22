@@ -22,6 +22,7 @@ import { diasAte } from '@/data/seed';
 import {
   Ampulheta,
   Balanca,
+  Caminhao,
   Capacete,
   Carimbo,
   Carrinho,
@@ -83,6 +84,7 @@ const SETORES: readonly Setor[] = [
       { href: '/compras', rotulo: 'Compras e materiais', Icone: Carrinho },
       { href: '/fornecedores', rotulo: 'Fornecedores', Icone: Carrinho },
       { href: '/equipamentos', rotulo: 'Equipamentos', Icone: Maquina },
+      { href: '/remessas', rotulo: 'Remessas', Icone: Caminhao },
     ],
   },
   {

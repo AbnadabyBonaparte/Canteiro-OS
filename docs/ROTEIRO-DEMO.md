@@ -1,5 +1,5 @@
-# ROTEIRO DA DEMONSTRAÇÃO — 15 minutos
-## Canteiro OS · vitrine v2
+# ROTEIRO DA DEMONSTRAÇÃO — 15 minutos (+3 da guia)
+## Canteiro OS · vitrine v2.1
 
 **Para quem conduz a mesa.** Vão sentar os sócios da empreiteira, o advogado
 deles e gente de desenho, arquitetura e engenharia. A ordem abaixo é a da dor,
@@ -13,6 +13,12 @@ não a do menu.
 
 Leia o **§11** antes da sala: é a lista do que **não** prometer, e é a parte que
 protege a casa.
+
+> ⭐⭐ **Novo na v2.1: a cena da guia (§13), 3 minutos.** Ela é a que se vê e se
+> toca — construtora e empreiteira gostam de ver a coisa acontecer, e ninguém
+> entrega documento sem ver ao vivo. **Jogue-a logo depois do §7 (Compras)**,
+> antes do caixa, quando a mesa for de quem toca o pátio. Se a mesa for do
+> advogado, ela pode ficar para o fim ou nem entrar.
 
 ---
 
@@ -261,12 +267,18 @@ listas do vocabulário.
 | **"Publica no PNCP"** | é ato do órgão público |
 | **"Escreve o contrato de empreita"** | os modelos são da empresa e vêm do jurídico dela |
 | **"Calcula o orçamento com SINAPI"** | é outro produto, com responsabilidade técnica de engenheiro |
-| **"Isto já está rodando"** | ⚠️ **é uma vitrine.** 21 telas, dados fictícios, sem banco |
+| **"Isto já está rodando"** | ⚠️ **é uma vitrine.** 24 telas, dados fictícios, sem banco |
 | **"Nossa IA analisa suas obras"** | o funcionário digital **conta e compara**. Chamar de IA o que é aritmética se descobre na segunda pergunta |
 | **"Estas são fotos das obras"** | ⛔ **todas as imagens são geradas e ilustrativas.** Nenhuma retrata obra, pessoa ou lugar reais |
 | **Qualquer número de mercado, ROI ou taxa de vitória** | não existe número medido |
 | **Qualquer nome de fornecedor de IA** | o cliente vê **motor ALSHAM** |
 | **Um prazo de entrega** | prazo cravado em reunião é prazo que se quebra |
+| ⛔ **"Já está emitindo nota e manifesto"** | ⚠️ **não está.** Os PDFs saem carimbados como demonstração; nada foi transmitido a órgão nenhum |
+| ⛔ **"O WhatsApp manda sozinho"** | o botão **abre a conversa com o texto pronto**. Quem aperta enviar é gente, e o envio automático não existe |
+| ⛔ **"A gente resolve o CFOP pro senhor"** | **ato de contador.** O sistema guarda a decisão dele, com data e fonte — e não sugere código |
+| ⛔ **"Guardamos o certificado digital da empresa"** | ⛔ **nunca.** O certificado vive no emissor; aqui ficaria só a referência |
+| ⛔ **"É só apertar e sai"** | sai **se** a operação estiver assinada. É a trava, e é o argumento |
+| ⚠️ **"Economiza uma manhã"** como número | *"uma manhã"* é o que o sócio disse, não o que a gente mediu |
 
 ---
 
@@ -286,6 +298,84 @@ listas do vocabulário.
    `docs/MIGRACAO.md` §0 entre os que precisam ser renomeados). ⚠️ **Ele foi
    escrito antes desta virada de vocabulário** e precisa da revisão dele — diga
    isso, não entregue como pronto.
+
+---
+
+## 13. ⭐⭐ A CENA DA GUIA — 3 min · o que se vê e se toca
+
+> **Jogue depois do §7 (Compras).** É a cena mais física da demonstração: sai um
+> documento, na hora, na tela do celular. Tenha o celular de verdade na mão.
+
+### Minuto 0–1 · a saída
+
+`/remessas` → **Nova saída**.
+
+> *"Nenhuma máquina sai do pátio sem guia, e conseguir a guia custa uma manhã: o
+> senhor liga pro contador, espera, e a máquina fica parada. Olha o que a gente
+> quer no lugar disso."*
+
+Procure **escavadeira**, toque nela, escolha a obra de destino.
+
+⭐ **No cardápio, aponte o cinza antes do dourado:**
+> *"Quatro destes botões não emitem nada. Falta a assinatura do contador da
+> empresa. Repare que eles continuam na lista, com o motivo escrito — se
+> sumissem, o encarregado ia procurar, não achar, e gastar a manhã de alguém no
+> telefone. E repare no que está escrito: **a ALSHAM não escolhe código fiscal.
+> Escolher é ato de contador; o que a gente faz é guardar quem escolheu e com
+> base em quê.**"*
+
+### Minuto 1–2 · ⭐⭐ a trava do manifesto — a regra que ninguém conta
+
+Escolha o caminhão **QBB2C34** de propósito. A tela recusa e diz por quê.
+
+> *"Este caminhão está com um manifesto em aberto desde ontem. Enquanto ninguém
+> marcar 'Chegou' na entrega dele, ele não sai de novo — é regra da SEFAZ, por
+> veículo. Quase nenhum sistema conta isso pro cliente, e é exatamente o que faz
+> a máquina esperar no pátio. Aqui o senhor descobre **antes** de apertar o
+> botão, não na recusa."*
+
+Troque para **QAA1B23**, escolha o motorista, **Gerar guia** → confirme.
+
+### Minuto 2–3 · o documento na mão
+
+> *"Dois documentos: a nota e o manifesto."*
+
+**Toque em "Ver a nota (PDF)"** e vire o celular para a mesa.
+
+⭐ **A fala, com o PDF aberto:**
+> *"Este PDF foi montado agora, neste aparelho, com os dados desta saída. E
+> repare na tarja atravessada: **demonstração, sem valor fiscal**. Não foi
+> transmitido a órgão nenhum, e a chave que está aí não pertence a documento
+> nenhum. Quando entrar o emissor, é este mesmo botão."*
+
+**"Enviar pro motorista"** — mostre a conversa abrindo com o texto pronto.
+> *"Abre a conversa com os números, a carga e o caminhão. **Quem aperta enviar é
+> o senhor** — a gente não manda nada sozinho, e envio automático eu não vou
+> prometer porque ainda não existe."*
+
+Volte, marque **Chegou** no manifesto, e mostre o que aconteceu.
+> *"Encerrou. Agora aquele caminhão sai de novo."*
+
+### O gancho — 20 segundos, e vale o resto da conversa
+
+Desça até **Fora do pátio**:
+> *"O gerador foi pro conserto há nove dias e não voltou. Ninguém marcou
+> caixinha nenhuma: é a conta de quem tem saída sem retorno registrado, e some
+> sozinha quando a volta entrar. E este número — dias parados — é o começo do
+> custo da máquina parada."*
+
+E, se der tempo, `/configuracoes#cardapio`:
+> *"Aqui está quem assinou cada operação, quando, e a fonte que consultou. É o
+> que o contador do senhor vai querer ver primeiro."*
+
+### ⛔ Nesta cena, jamais
+
+- ⛔ apresentar o PDF como documento válido — **a tarja está lá, aponte para ela**;
+- ⛔ dizer que já emite: faltam **inscrição estadual, certificado da empresa e o
+  cardápio assinado**, e nenhum dos três é nosso;
+- ⛔ prometer envio automático de WhatsApp;
+- ⛔ dar o CFOP como certo — **ilustrativo**, sempre;
+- ⛔ dizer que o manifesto aberto "trava a empresa": **trava aquele caminhão.**
 
 ---
 

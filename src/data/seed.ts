@@ -380,6 +380,11 @@ export interface Equipamento {
   readonly horimetro: number;
   readonly proximaManutencaoHoras: number;
   readonly estado: 'operando' | 'parado' | 'manutencao';
+  /**
+   * ⭐ Valor de referência do BEM, que mora no cadastro do patrimônio — não é a
+   * remessa que o inventa na hora. A guia carrega o que o cadastro já dizia.
+   */
+  readonly valorReferenciaCents: number;
 }
 
 /** Custo real lançado na obra — livro, não planilha. */
@@ -437,6 +442,13 @@ export interface Mundo {
   readonly custos: readonly CustoDaObra[];
   readonly contasAPagar: readonly ContaAPagar[];
   readonly pendencias: readonly Pendencia[];
+  // ⭐ v2.1 — a remessa
+  readonly operacoesFiscais: readonly OperacaoFiscal[];
+  readonly veiculos: readonly Veiculo[];
+  readonly motoristas: readonly Motorista[];
+  readonly remessas: readonly Remessa[];
+  readonly documentosFiscais: readonly DocumentoFiscal[];
+  readonly eventosRemessa: readonly EventoRemessa[];
   /**
    * ⚖️ A RÉGUA DE CONCENTRAÇÃO — quatro parâmetros, todos do TENANT.
    * Quem define é o jurídico da empresa; o sistema não sugere número nenhum.
@@ -1865,6 +1877,7 @@ const EQUIPAMENTOS: readonly Equipamento[] = [
     horimetro: 1_842,
     proximaManutencaoHoras: 1_900,
     estado: 'operando',
+    valorReferenciaCents: 480_000,
   },
   {
     id: 'eq-2',
@@ -1875,6 +1888,7 @@ const EQUIPAMENTOS: readonly Equipamento[] = [
     horimetro: 4_610,
     proximaManutencaoHoras: 4_500,
     estado: 'manutencao',
+    valorReferenciaCents: 18_000_000,
   },
   {
     id: 'eq-3',
@@ -1885,6 +1899,7 @@ const EQUIPAMENTOS: readonly Equipamento[] = [
     horimetro: 8_930,
     proximaManutencaoHoras: 9_200,
     estado: 'operando',
+    valorReferenciaCents: 21_000_000,
   },
   {
     id: 'eq-4',
@@ -1895,6 +1910,7 @@ const EQUIPAMENTOS: readonly Equipamento[] = [
     horimetro: 6_204,
     proximaManutencaoHoras: 6_400,
     estado: 'operando',
+    valorReferenciaCents: 16_000_000,
   },
   {
     id: 'eq-5',
@@ -1905,6 +1921,7 @@ const EQUIPAMENTOS: readonly Equipamento[] = [
     horimetro: 0,
     proximaManutencaoHoras: 0,
     estado: 'operando',
+    valorReferenciaCents: 1_200_000,
   },
   {
     id: 'eq-6',
@@ -1915,6 +1932,7 @@ const EQUIPAMENTOS: readonly Equipamento[] = [
     horimetro: 912,
     proximaManutencaoHoras: 800,
     estado: 'parado',
+    valorReferenciaCents: 240_000,
   },
   {
     id: 'eq-7',
@@ -1925,6 +1943,55 @@ const EQUIPAMENTOS: readonly Equipamento[] = [
     horimetro: 1_120,
     proximaManutencaoHoras: 1_400,
     estado: 'operando',
+    valorReferenciaCents: 390_000,
+  },
+  // ⭐ v2.1 — os três que a cena da guia usa. A escavadeira é a que sai na
+  // demonstração; o gerador é o que está fora do pátio há nove dias; a
+  // lavanderia é o item de LOCAÇÃO (a empresa tem CNAE de locação, e por isso
+  // "alugar máquina pra terceiro" existe no cardápio — em cinza, sem assinatura).
+  {
+    id: 'eq-8',
+    nome: 'Escavadeira hidráulica 20 t',
+    patrimonio: 'EH-021',
+    obraId: 'creche',
+    desde: diasAtras(95),
+    horimetro: 3_260,
+    proximaManutencaoHoras: 3_500,
+    estado: 'operando',
+    valorReferenciaCents: 52_000_000,
+  },
+  {
+    id: 'eq-9',
+    nome: 'Gerador 180 kVA',
+    patrimonio: 'GE-007',
+    obraId: 'pavimentacao',
+    desde: diasAtras(220),
+    horimetro: 2_410,
+    proximaManutencaoHoras: 2_600,
+    estado: 'manutencao',
+    valorReferenciaCents: 8_500_000,
+  },
+  {
+    id: 'eq-10',
+    nome: 'Compressor de ar 10 pcm',
+    patrimonio: 'CP-012',
+    obraId: 'ubs',
+    desde: diasAtras(48),
+    horimetro: 940,
+    proximaManutencaoHoras: 1_200,
+    estado: 'operando',
+    valorReferenciaCents: 740_000,
+  },
+  {
+    id: 'eq-11',
+    nome: 'Lavanderia industrial — contêiner',
+    patrimonio: 'LV-002',
+    obraId: 'creche',
+    desde: diasAtras(30),
+    horimetro: 310,
+    proximaManutencaoHoras: 600,
+    estado: 'operando',
+    valorReferenciaCents: 9_800_000,
   },
 ];
 
@@ -2099,6 +2166,312 @@ const PENDENCIAS: readonly Pendencia[] = construirPendencias();
 // O MUNDO
 // ─────────────────────────────────────────────────────────────────────────────
 
+// ═══════════════════════════════════════════════════════════════════════════
+// ⭐⭐ v2.1 — REMESSA: o cardápio, a frota e o livro
+// ---------------------------------------------------------------------------
+// Espelho fiel do módulo `remessa` do Business OS (PR #105): os mesmos nomes,
+// a mesma ordem, a mesma física. Quando o produto ligar, a mesa já conhece a
+// tela — e é essa a razão de a vitrine existir.
+//
+// ⛔ **Nenhuma coluna de estado nos fatos.** A operação está ativa PORQUE tem
+// assinatura; o estado do documento sai do LIVRO; a pendência de retorno é
+// contagem. Igual ao produto.
+//
+// ⚠️ **Todo CFOP aqui é ILUSTRATIVO.** Quem define e assina é o contador da
+// empresa — e a tela diz isso em toda superfície onde o número aparece.
+// ═══════════════════════════════════════════════════════════════════════════
+
+/** Uma linha do cardápio de operações fiscais. */
+export interface OperacaoFiscal {
+  readonly id: string;
+  /** O BOTÃO, em língua de obra. */
+  readonly rotulo: string;
+  readonly natureza: string;
+  /** ⚠️ ILUSTRATIVO — do contador da empresa, nunca do sistema. */
+  readonly cfop: string;
+  readonly exigeManifesto: boolean;
+  readonly exigeRetorno: boolean;
+  readonly prazoRetornoDias: number | null;
+  /** A operação-par da volta (id solto). */
+  readonly operacaoDeRetornoId: string | null;
+  /** ⭐ Sem assinatura, a operação não emite. Não existe campo "ativa". */
+  readonly assinatura: AssinaturaDeOperacao | null;
+}
+
+export interface AssinaturaDeOperacao {
+  readonly por: string;
+  readonly papel: string;
+  readonly em: string;
+  /** ⭐ A fonte consultada. É ela que responde "com base em quê?" depois. */
+  readonly fonte: string;
+}
+
+export interface Veiculo {
+  readonly id: string;
+  readonly placa: string;
+  readonly tipo: string;
+  readonly uf: string;
+}
+
+export interface Motorista {
+  readonly id: string;
+  readonly nome: string;
+  /** ⚠️ Fictício e sem formato. A vitrine não guarda documento de gente real. */
+  readonly documento: string;
+  readonly telefone: string;
+}
+
+export type TipoDocumentoFiscal = 'nfe' | 'mdfe';
+
+export interface DocumentoFiscal {
+  readonly id: string;
+  readonly remessaId: string;
+  readonly tipo: TipoDocumentoFiscal;
+  readonly numero: string;
+  /** ⚠️ Chave FICTÍCIA — 44 dígitos que não pertencem a documento nenhum. */
+  readonly chave: string;
+  readonly emitidoEm: string;
+}
+
+export interface ItemRemessa {
+  readonly equipamentoId: string | null;
+  readonly descricao: string;
+  readonly quantidade: number;
+  readonly unidade: string;
+  readonly valorReferenciaCents: number;
+}
+
+export interface Remessa {
+  readonly id: string;
+  readonly numero: string;
+  readonly operacaoId: string;
+  readonly origemObraId: string | null;
+  readonly origemRotulo: string;
+  readonly destinoObraId: string | null;
+  readonly destinoRotulo: string;
+  readonly veiculoId: string;
+  readonly motoristaId: string;
+  readonly itens: readonly ItemRemessa[];
+  readonly ocorreuEm: string;
+  readonly registradoEm: string;
+  /** ⭐ Obrigatório quando as datas divergem — a Lei da Prova na vitrine. */
+  readonly motivoDeAtraso: string;
+  readonly cancelada: { readonly motivo: string; readonly em: string; readonly por: string } | null;
+}
+
+/** O LIVRO. O estado sai daqui — nunca de coluna. */
+export type TipoEventoRemessa =
+  | 'saida-registrada'
+  | 'documento-autorizado'
+  | 'manifesto-encerrado'
+  | 'retorno-registrado'
+  | 'remessa-cancelada';
+
+export interface EventoRemessa {
+  readonly id: string;
+  readonly remessaId: string;
+  readonly documentoId: string | null;
+  readonly tipo: TipoEventoRemessa;
+  readonly ocorreuEm: string;
+  readonly registradoEm: string;
+  readonly motivo: string;
+  readonly por: string;
+}
+
+// ── O CARDÁPIO ───────────────────────────────────────────────────────────────
+// ⭐ DOIS assinados, QUATRO em cinza. A cena que a demonstração precisa: o botão
+// que não emite prova que a ALSHAM não escolhe código fiscal por ninguém.
+const OPERACOES: readonly OperacaoFiscal[] = [
+  {
+    id: 'op-obra',
+    rotulo: 'Mandar máquina pra outra obra',
+    natureza: 'Remessa de bem do ativo imobilizado',
+    cfop: '5.554',
+    exigeManifesto: true,
+    exigeRetorno: false,
+    prazoRetornoDias: null,
+    operacaoDeRetornoId: null,
+    assinatura: {
+      por: 'contador da empresa',
+      papel: 'responsável fiscal',
+      em: diasAtras(38),
+      fonte: 'consulta ao RICMS estadual, conferida na data',
+    },
+  },
+  {
+    id: 'op-conserto',
+    rotulo: 'Máquina quebrou, mandar pro conserto',
+    natureza: 'Remessa de bem para conserto',
+    cfop: '5.915',
+    exigeManifesto: true,
+    exigeRetorno: true,
+    prazoRetornoDias: 30,
+    operacaoDeRetornoId: 'op-volta-conserto',
+    assinatura: {
+      por: 'contador da empresa',
+      papel: 'responsável fiscal',
+      em: diasAtras(38),
+      fonte: 'consulta ao RICMS estadual, conferida na data',
+    },
+  },
+  {
+    id: 'op-volta-conserto',
+    rotulo: 'Voltou do conserto',
+    natureza: 'Retorno de bem enviado para conserto',
+    cfop: '1.916',
+    exigeManifesto: false,
+    exigeRetorno: false,
+    prazoRetornoDias: null,
+    operacaoDeRetornoId: null,
+    assinatura: null,
+  },
+  {
+    id: 'op-volta-patio',
+    rotulo: 'Voltou pro pátio',
+    natureza: 'Retorno de bem do ativo imobilizado',
+    cfop: '1.554',
+    exigeManifesto: false,
+    exigeRetorno: false,
+    prazoRetornoDias: null,
+    operacaoDeRetornoId: null,
+    assinatura: null,
+  },
+  {
+    id: 'op-material',
+    rotulo: 'Mandar material pra obra',
+    natureza: 'Remessa de material de uso e consumo',
+    cfop: '5.949',
+    exigeManifesto: false,
+    exigeRetorno: false,
+    prazoRetornoDias: null,
+    operacaoDeRetornoId: null,
+    assinatura: null,
+  },
+  {
+    id: 'op-locacao',
+    rotulo: 'Alugar máquina pra terceiro',
+    natureza: 'Remessa para locação',
+    cfop: '',
+    exigeManifesto: true,
+    exigeRetorno: true,
+    prazoRetornoDias: 60,
+    operacaoDeRetornoId: null,
+    assinatura: null,
+  },
+];
+
+const VEICULOS: readonly Veiculo[] = [
+  { id: 've-1', placa: 'QAA1B23', tipo: 'caminhão prancha', uf: 'MT' },
+  { id: 've-2', placa: 'QBB2C34', tipo: 'caminhão munck', uf: 'MT' },
+  { id: 've-3', placa: 'QCC3D45', tipo: 'caminhão basculante', uf: 'MT' },
+];
+
+const MOTORISTAS: readonly Motorista[] = [
+  { id: 'mo-1', nome: 'Sebastião A.', documento: 'FICTICIO-0001', telefone: '5566900000001' },
+  { id: 'mo-2', nome: 'Raimundo P.', documento: 'FICTICIO-0002', telefone: '5566900000002' },
+  { id: 'mo-3', nome: 'Elias N.', documento: 'FICTICIO-0003', telefone: '5566900000003' },
+];
+
+/** ⚠️ 44 dígitos FICTÍCIOS e determinísticos. Não é chave de documento nenhum. */
+export function chaveFicticia(semente: string): string {
+  let h = 2166136261;
+  for (let i = 0; i < semente.length; i += 1) {
+    h ^= semente.charCodeAt(i);
+    h = Math.imul(h, 16777619) >>> 0;
+  }
+  let saida = '';
+  let x = h;
+  for (let i = 0; i < 44; i += 1) {
+    x = (Math.imul(x, 1103515245) + 12345) >>> 0;
+    saida += String((x >>> 16) % 10);
+  }
+  return saida;
+}
+
+// ── O QUE JÁ ESTÁ NO LIVRO quando a demonstração abre ────────────────────────
+// ⭐ Duas cenas plantadas, e cada uma vira um aviso do funcionário digital:
+//   1. o GERADOR saiu para conserto há 9 dias e não voltou;
+//   2. o MDF-e dessa saída está AUTORIZADO e não encerrado desde ontem — e é
+//      isso que trava o próximo manifesto.
+const REMESSAS: readonly Remessa[] = [
+  {
+    id: 'rem-1',
+    numero: '000001',
+    operacaoId: 'op-conserto',
+    origemObraId: 'pavimentacao',
+    origemRotulo: 'Obra Avenida das Palmeiras',
+    destinoObraId: null,
+    destinoRotulo: 'Oficina parceira — Serra Azul',
+    veiculoId: 've-2',
+    motoristaId: 'mo-2',
+    itens: [
+      {
+        equipamentoId: 'eq-9',
+        descricao: 'Gerador 180 kVA · GE-007',
+        quantidade: 1,
+        unidade: 'UN',
+        valorReferenciaCents: 8_500_000,
+      },
+    ],
+    ocorreuEm: diasAtras(9),
+    registradoEm: diasAtras(9),
+    motivoDeAtraso: '',
+    cancelada: null,
+  },
+];
+
+const DOCUMENTOS_FISCAIS: readonly DocumentoFiscal[] = [
+  {
+    id: 'doc-1',
+    remessaId: 'rem-1',
+    tipo: 'nfe',
+    numero: '000001',
+    chave: chaveFicticia('rem-1-nfe'),
+    emitidoEm: diasAtras(9),
+  },
+  {
+    id: 'doc-2',
+    remessaId: 'rem-1',
+    tipo: 'mdfe',
+    numero: '000001',
+    chave: chaveFicticia('rem-1-mdfe'),
+    emitidoEm: diasAtras(9),
+  },
+];
+
+const EVENTOS_REMESSA: readonly EventoRemessa[] = [
+  {
+    id: 'ev-1',
+    remessaId: 'rem-1',
+    documentoId: null,
+    tipo: 'saida-registrada',
+    ocorreuEm: diasAtras(9),
+    registradoEm: diasAtras(9),
+    motivo: '',
+    por: 'Sr. Aparecido',
+  },
+  {
+    id: 'ev-2',
+    remessaId: 'rem-1',
+    documentoId: 'doc-1',
+    tipo: 'documento-autorizado',
+    ocorreuEm: diasAtras(9),
+    registradoEm: diasAtras(9),
+    motivo: '',
+    por: 'sistema',
+  },
+  {
+    id: 'ev-3',
+    remessaId: 'rem-1',
+    documentoId: 'doc-2',
+    tipo: 'documento-autorizado',
+    ocorreuEm: diasAtras(1),
+    registradoEm: diasAtras(1),
+    motivo: '',
+    por: 'sistema',
+  },
+];
+
 export const MUNDO: Mundo = {
   prefeituras: PREFEITURAS,
   obras: OBRAS,
@@ -2123,6 +2496,12 @@ export const MUNDO: Mundo = {
   custos: CUSTOS,
   contasAPagar: CONTAS,
   pendencias: PENDENCIAS,
+  operacoesFiscais: OPERACOES,
+  veiculos: VEICULOS,
+  motoristas: MOTORISTAS,
+  remessas: REMESSAS,
+  documentosFiscais: DOCUMENTOS_FISCAIS,
+  eventosRemessa: EVENTOS_REMESSA,
   // ⚖️ Valores de EXEMPLO, os quatro. Quem define é o jurídico da empresa — e a
   // tela de Configurações diz isso com todas as letras.
   reguaConcentracao: {
