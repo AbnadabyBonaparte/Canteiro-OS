@@ -15,6 +15,7 @@
 import { useSyncExternalStore } from 'react';
 import {
   MUNDO,
+  chaveFicticia,
   type Compra,
   type EntradaDiario,
   type Empreiteiro,
@@ -24,6 +25,10 @@ import {
   type Mundo,
   type Proposta,
   type ReguaConcentracao,
+  type DocumentoFiscal,
+  type EventoRemessa,
+  type ItemRemessa,
+  type Remessa,
   diasAtras,
 } from '@/data/seed';
 
@@ -339,6 +344,228 @@ export function fecharMedicao(medicaoId: string): void {
  */
 export function definirReguaConcentracao(r: ReguaConcentracao): void {
   estado = { ...estado, reguaConcentracao: r };
+  avisar();
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// ⭐⭐ v2.1 — A REMESSA
+// ---------------------------------------------------------------------------
+// Espelho fiel do módulo `remessa` do Business OS (PR #105). ⛔ Nada aqui tem
+// coluna de estado: a saída é fato consumado, o documento fica autorizado até
+// existir o evento de encerramento, e a pendência de retorno é contagem.
+// ═══════════════════════════════════════════════════════════════════════════
+
+export interface RascunhoDeRemessa {
+  readonly operacaoId: string;
+  readonly origemObraId: string | null;
+  readonly origemRotulo: string;
+  readonly destinoObraId: string | null;
+  readonly destinoRotulo: string;
+  readonly veiculoId: string;
+  readonly motoristaId: string;
+  readonly itens: readonly ItemRemessa[];
+  readonly por: string;
+}
+
+function proximoNumero(existentes: readonly { readonly numero: string }[]): string {
+  const maior = existentes.reduce((m, x) => Math.max(m, Number(x.numero) || 0), 0);
+  return String(maior + 1).padStart(6, '0');
+}
+
+/**
+ * ⭐⭐ A SAÍDA. Grava o fato, pede os documentos e escreve tudo no livro — na
+ * mesma "transação", como o produto faz.
+ *
+ * ⛔ **A operação sem assinatura não passa por aqui.** No produto quem recusa é
+ * o gatilho do banco; na vitrine é esta guarda — e a tela nem oferece o botão.
+ * As duas camadas dizem a mesma coisa, e é assim que a mesa aprende a regra.
+ */
+export function registrarRemessa(r: RascunhoDeRemessa): string | null {
+  const operacao = estado.operacoesFiscais.find((o) => o.id === r.operacaoId);
+  if (!operacao || operacao.assinatura === null) return null;
+
+  const id = novoId('rem');
+  const agora = diasAtras(0);
+  const numero = proximoNumero(estado.remessas);
+
+  const remessa: Remessa = {
+    id,
+    numero,
+    operacaoId: r.operacaoId,
+    origemObraId: r.origemObraId,
+    origemRotulo: r.origemRotulo,
+    destinoObraId: r.destinoObraId,
+    destinoRotulo: r.destinoRotulo,
+    veiculoId: r.veiculoId,
+    motoristaId: r.motoristaId,
+    itens: r.itens,
+    ocorreuEm: agora,
+    registradoEm: agora,
+    motivoDeAtraso: '',
+    cancelada: null,
+  };
+
+  const documentos: DocumentoFiscal[] = [
+    {
+      id: `${id}-nfe`,
+      remessaId: id,
+      tipo: 'nfe',
+      numero: proximoNumero(estado.documentosFiscais.filter((d) => d.tipo === 'nfe')),
+      chave: chaveFicticia(`${id}-nfe`),
+      emitidoEm: agora,
+    },
+  ];
+
+  // ⭐ O manifesto só nasce quando a operação o exige. Emitir um MDF-e que a
+  // operação não pede seria inventar obrigação — e um manifesto a mais trava o
+  // próximo de graça.
+  if (operacao.exigeManifesto) {
+    documentos.push({
+      id: `${id}-mdfe`,
+      remessaId: id,
+      tipo: 'mdfe',
+      numero: proximoNumero(estado.documentosFiscais.filter((d) => d.tipo === 'mdfe')),
+      chave: chaveFicticia(`${id}-mdfe`),
+      emitidoEm: agora,
+    });
+  }
+
+  const eventos: EventoRemessa[] = [
+    {
+      id: novoId('ev'),
+      remessaId: id,
+      documentoId: null,
+      tipo: 'saida-registrada',
+      ocorreuEm: agora,
+      registradoEm: agora,
+      motivo: '',
+      por: r.por,
+    },
+    ...documentos.map((d) => ({
+      id: novoId('ev'),
+      remessaId: id,
+      documentoId: d.id,
+      tipo: 'documento-autorizado' as const,
+      ocorreuEm: agora,
+      registradoEm: agora,
+      motivo: '',
+      por: 'sistema',
+    })),
+  ];
+
+  estado = {
+    ...estado,
+    remessas: [remessa, ...estado.remessas],
+    documentosFiscais: [...estado.documentosFiscais, ...documentos],
+    eventosRemessa: [...estado.eventosRemessa, ...eventos],
+  };
+  avisar();
+  return id;
+}
+
+/**
+ * ⭐⭐ "CHEGOU" — encerra o manifesto.
+ *
+ * Sem isto a SEFAZ recusa o manifesto seguinte. É a regra que quase ninguém
+ * conta ao cliente, e é a razão de este botão existir no celular.
+ */
+export function marcarChegada(documentoId: string, por: string): void {
+  const documento = estado.documentosFiscais.find((d) => d.id === documentoId);
+  if (!documento) return;
+
+  const jaEncerrado = estado.eventosRemessa.some(
+    (e) => e.documentoId === documentoId && e.tipo === 'manifesto-encerrado',
+  );
+  if (jaEncerrado) return;
+
+  const agora = diasAtras(0);
+  estado = {
+    ...estado,
+    eventosRemessa: [
+      ...estado.eventosRemessa,
+      {
+        id: novoId('ev'),
+        remessaId: documento.remessaId,
+        documentoId,
+        tipo: 'manifesto-encerrado',
+        ocorreuEm: agora,
+        registradoEm: agora,
+        motivo: '',
+        por,
+      },
+    ],
+  };
+  avisar();
+}
+
+/** ⭐ O retorno fecha a pendência — e não apaga a saída. */
+export function registrarRetorno(remessaId: string, por: string): void {
+  const agora = diasAtras(0);
+  estado = {
+    ...estado,
+    eventosRemessa: [
+      ...estado.eventosRemessa,
+      {
+        id: novoId('ev'),
+        remessaId,
+        documentoId: null,
+        tipo: 'retorno-registrado',
+        ocorreuEm: agora,
+        registradoEm: agora,
+        motivo: '',
+        por,
+      },
+    ],
+  };
+  avisar();
+}
+
+/**
+ * ⭐⭐ O SEGUNDO ATO — e ele é separado de propósito.
+ *
+ * No Business OS quem guarda o LUGAR é o `pat` (`pat.transfers`); a remessa é
+ * outro fato, em outro schema, com outra permissão. A tela faz os dois, cada um
+ * pela sua porta — e se o segundo falhar, o primeiro fica de pé, porque a nota
+ * já foi autorizada e o sistema não pode fingir que não foi.
+ *
+ * Aqui a vitrine espelha isso: mover o equipamento é um clique próprio, com o
+ * seu próprio botão, depois que a máquina chegou.
+ */
+export function moverEquipamento(equipamentoId: string, obraId: string): void {
+  estado = {
+    ...estado,
+    equipamentos: estado.equipamentos.map((e) =>
+      e.id === equipamentoId ? { ...e, obraId, desde: diasAtras(0) } : e,
+    ),
+  };
+  avisar();
+}
+
+/**
+ * ⭐ O LIVRO IMUTÁVEL: não existe excluir. Existe **cancelar com motivo**, e a
+ * remessa cancelada continua à vista, riscada, com quem cancelou e por quê.
+ */
+export function cancelarRemessa(id: string, motivo: string, por: string): void {
+  const agora = diasAtras(0);
+  estado = {
+    ...estado,
+    remessas: estado.remessas.map((r) =>
+      r.id === id && r.cancelada === null ? { ...r, cancelada: { motivo, em: agora, por } } : r,
+    ),
+    eventosRemessa: [
+      ...estado.eventosRemessa,
+      {
+        id: novoId('ev'),
+        remessaId: id,
+        documentoId: null,
+        tipo: 'remessa-cancelada',
+        ocorreuEm: agora,
+        registradoEm: agora,
+        motivo,
+        por,
+      },
+    ],
+  };
   avisar();
 }
 

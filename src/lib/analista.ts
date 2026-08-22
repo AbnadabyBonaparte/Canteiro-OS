@@ -13,6 +13,7 @@ import type { Mundo, Obra } from '@/data/seed';
 import { diasAte, diasDesde } from '@/data/seed';
 import { MOTIVOS_DE_GLOSA, TIPOS_DE_DOCUMENTO, nomeDe } from '@/data/taxonomias';
 import { data, dias, dinheiro, dinheiroCurto, haDias, numero, pct, plural } from './formato';
+import { manifestosAbertos, pendenciasDeRetorno } from './remessa';
 
 export type TomAviso = 'rust' | 'gold' | 'olive';
 
@@ -706,6 +707,54 @@ export function avisos(mundo: Mundo): Aviso[] {
       fonte: 'Resolutividade',
       href: '/resolutividade',
       notadoHaMin: 148,
+    });
+  }
+
+  // 16 — 🚚 máquina fora do pátio, sem retorno registrado
+  // ⭐ Não é caixinha que alguém marca: é a conta de quem tem saída registrada
+  // e nenhum retorno no livro. Some sozinha quando a volta entrar. Acende em
+  // atenção enquanto está no prazo, e vira decisão quando passa dele.
+  const foraDoPatio = pendenciasDeRetorno(mundo);
+  if (foraDoPatio.length > 0) {
+    const pior = foraDoPatio[0];
+    const carga = pior.remessa.itens.map((i) => i.descricao).join(', ');
+    saida.push({
+      id: 'remessa-sem-retorno',
+      tom: pior.foraDoPrazo ? 'rust' : 'gold',
+      titulo: `${carga} fora do pátio há ${dias(pior.diasFora)}`,
+      detalhe: `${pior.operacao.rotulo} · saiu para ${pior.remessa.destinoRotulo}`,
+      porque: [
+        `A saída nº ${pior.remessa.numero} foi registrada em ${data(pior.remessa.ocorreuEm)} — há ${dias(pior.diasFora)}.`,
+        `A operação "${pior.operacao.rotulo}" cobra retorno${pior.operacao.prazoRetornoDias !== null ? ` em ${dias(pior.operacao.prazoRetornoDias)}` : ''}.`,
+        'Não há evento de retorno registrado para esta saída até hoje.',
+        pior.foraDoPrazo
+          ? 'O prazo já passou — e máquina fora do prazo de retorno é máquina parada em oficina de terceiro.'
+          : 'Ainda está dentro do prazo. A linha existe para que o prazo não vença sem ninguém ter olhado.',
+      ],
+      fonte: `Saída nº ${pior.remessa.numero}`,
+      href: `/remessas/${pior.remessa.id}`,
+      notadoHaMin: 19,
+    });
+  }
+
+  // 17 — 📄 manifesto em aberto, e o caminhão que ele trava
+  const manifestos = manifestosAbertos(mundo);
+  if (manifestos.length > 0) {
+    const m = manifestos[0];
+    saida.push({
+      id: 'manifesto-aberto',
+      tom: 'gold',
+      titulo: `Manifesto nº ${m.documento.numero} em aberto ${m.diasAberto === 0 ? 'desde hoje' : `há ${dias(m.diasAberto)}`}`,
+      detalhe: `${m.remessa.origemRotulo} para ${m.remessa.destinoRotulo}`,
+      porque: [
+        `O manifesto nº ${m.documento.numero} foi autorizado em ${data(m.documento.emitidoEm)}.`,
+        'Não há evento de encerramento para ele no livro.',
+        'Com o manifesto em aberto, a próxima saída deste caminhão é recusada — encerrar é marcar "Chegou" na entrega.',
+        'É a regra que quase nenhum sistema conta ao cliente, e a que faz o caminhão esperar no pátio.',
+      ],
+      fonte: `Saída nº ${m.remessa.numero}`,
+      href: `/remessas/${m.remessa.id}`,
+      notadoHaMin: 7,
     });
   }
 

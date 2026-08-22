@@ -20,7 +20,7 @@
 
 ## O que é
 
-Um sistema de demonstração com **21 rotas**, organizado pelos setores que uma
+Um sistema de demonstração com **24 rotas**, organizado pelos setores que uma
 empreiteira de verdade tem. Dados fictícios, estado em memória, **zero banco**.
 
 ### ⚖️ O vocabulário é o de empreita — e isso é lei, não estilo
@@ -48,7 +48,7 @@ na tela**. Esta vitrine é:
 
 | Carimbo | Estado |
 |---|---|
-| Operável na tela | **100%** — 21 rotas, com uma ação que funciona em cada sala |
+| Operável na tela | **100%** — 24 rotas, com uma ação que funciona em cada sala |
 | Aplicado no banco | **0%** — não há banco. Nenhum |
 | Construído como produto | **0%** — nada aqui é `packages/`, migration ou schema |
 
@@ -90,7 +90,7 @@ Sem variável de ambiente, a vitrine roda com o nome de fantasia. Ver
 ## Estrutura
 
 ```
-src/app/(demo)/        as 21 rotas, agrupadas por setor
+src/app/(demo)/        as 24 rotas, agrupadas por setor
 src/data/seed.ts       3 obras, 3 prefeituras, 40 parceiros de empreita,
                        97 empreitas, 92 propostas, 20 medições, 42 compras,
                        contratos, aditivos, ofícios, equipe, EPI, equipamentos,
@@ -107,6 +107,7 @@ docs/IMAGENS.md        o lote, os textos, a ferramenta de cada peça
 docs/ROTEIRO-DEMO.md   os 15 minutos, com as falas e o que NÃO prometer
 docs/MIGRACAO.md       o que volta para o Business OS e o que morre aqui
 docs/screenshots/v2/   as 21 rotas em desktop e 4 em 390px
+docs/screenshots/v2.1/ a cena da guia inteira, em 390px
 ```
 
 ## Medido, não prometido

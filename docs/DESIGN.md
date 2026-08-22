@@ -371,7 +371,7 @@ Imagem é justamente onde o template de agência entra. Nomeando para recusar:
 
 ---
 
-## 12. O CORPO — de 5 telas a 21 rotas, sem sala vazia
+## 12. O CORPO — de 5 telas a 24 rotas, sem sala vazia
 
 O menu passou a ser **por setor**, do jeito que uma empreiteira divide o próprio trabalho: Direção · Obras · Pessoas · Suprimentos · Financeiro · Documentos · Inteligência. As duas pernas continuam: menu **e** busca global (obra, contrato, empreiteiro, fornecedor, documento, medição).
 
@@ -381,5 +381,47 @@ O menu passou a ser **por setor**, do jeito que uma empreiteira divide o própri
 |---|---|
 | ≤ 640px | barra inferior com 5 destinos + **Setores** (folha com o menu inteiro), alvos de 48–60px |
 | ≥ 1025px | coluna lateral com os 7 setores abertos + busca |
+
+---
+
+## 13. A GUIA — v2.1 · o que se vê e se toca
+
+Construtora e empreiteira compram o que enxergam. A remessa entrou na vitrine
+porque ela é a única sala em que **sai um objeto**: um documento, na hora, na
+mão de quem está na mesa. As decisões que sustentam isso:
+
+**O PDF é montado no navegador, no carregamento da guia.** Sem dependência, sem
+serviço, sem arquivo guardado — `src/lib/pdf.ts` escreve os objetos PDF 1.4 na
+unha (≈3 kB por documento). Não é firula: um PDF de exemplo guardado em `public/`
+seria sempre o mesmo documento, e a mesa percebe na primeira troca de máquina.
+
+**Todo documento sai carimbado na diagonal: DEMONSTRAÇÃO · SEM VALOR FISCAL.**
+Um documento de demonstração que pareça verdadeiro é o começo de um problema que
+ninguém quer ter. A chave de 44 dígitos é determinística e **não pertence a
+documento nenhum** — a tela diz isso, e o PDF também.
+
+**O cardápio é dado da empresa, e a assinatura é a trava.** Operação sem
+assinatura do contador aparece na lista, em cinza, com o motivo — e não emite.
+Sumir seria pior: o encarregado procuraria o botão, não acharia, e gastaria a
+manhã de alguém no telefone. ⛔ **Não há um único `case` de CFOP em código.**
+
+**A trava do manifesto é do CAMINHÃO, não da empresa.** A recusa da SEFAZ é por
+veículo. "Trava a empresa inteira" seria mais assustador, mais fácil de vender e
+mentira — e do jeito certo a saída aparece junto com o problema: encerre o
+manifesto daquela placa, ou mande em outro caminhão. O impedimento é mostrado
+**antes** do botão, não na recusa.
+
+**Nenhum estado é coluna.** A operação está ativa porque tem assinatura; o
+manifesto está aberto porque não existe o evento de encerramento; a pendência de
+retorno é a conta de quem saiu e não voltou. É a física do módulo `remessa` do
+Business OS — quando o produto ligar, a mesa já conhece a tela.
+
+**Mover a máquina é um segundo ato, e é de propósito.** A guia é o ato de
+transporte; onde o bem fica é o cadastro do patrimônio (`pat.transfers`, no
+produto). Se o segundo falhar, o primeiro fica de pé — a nota já saiu, e o
+sistema não pode fingir que não saiu.
+
+**O WhatsApp abre a conversa; quem envia é gente.** Envio automático não existe,
+e a tela diz isso na linha de baixo do botão.
 
 *Universo Bonaparte · ALSHAM Global Commerce Ltda · Powered by ALSHAM*
